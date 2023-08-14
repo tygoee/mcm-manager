@@ -31,7 +31,7 @@ An example file:
         {
             "type": "cf", // curseforge
             "slug": "worldedit",
-            "name": "worldedit-mod-7.2.15.jar", // ascii encoded
+            "name": "worldedit-mod-7.2.15.jar",
             "id": 4586218
         },
         {
