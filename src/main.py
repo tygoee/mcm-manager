@@ -59,141 +59,13 @@ def prepare_mods(total_size: int, install_path: str, mods: list[dict[str, Any]])
     return total_size
 
 
-def install(manifest_file: str, install_path: str = '', confirm: bool = False) -> None:
-    """
-    Install a list of mods, resourcepacks, shaderpacks and config files. Arguments:
-
-    :param manifest_file: This should be a path to a
-    manifest file. The file structure:
-
-    ```json
-    {
-        "minecraft": {
-            "version": "(version)",
-            "modloader": "(modloader)-(modloader version)"
-        },
-        "mods": [
-            {
-                "type": "(type)",
-                "slug": "(slug)",
-                "name": "(filename)"
-            }
-        ]
-    }
-    ```
-
-    An example file:
-
-    ```json
-    {
-        "minecraft": {
-            "version": "1.20.1",
-            "modloader": "fabric-0.14.22"
-        },
-        "mods": [
-            {
-                "type": "cf", // curseforge
-                "slug": "worldedit",
-                "name": "worldedit-mod-7.2.15.jar", // ascii encoded
-                "id": 4586218
-            },
-            {
-                "type": "mr", // modrinth
-                "slug": "sodium",
-                "name": "sodium-fabric-mc1.20.1-0.5.1.jar",
-                "id": "AANobbMIOkwCNtFH"
-            },
-            {
-                "type": "url", // custom url
-                "slug": "essential", // doesn't matter
-                "name": "Essential-fabric_1-20-1.jar",
-                "link": "https://cdn.essential.gg/mods/60ecf53d6b26c76a26d49e5b/649c45fb8b045520b2c1c8b2/Essential-fabric_1-20-1.jar",
-                "info": {
-                    "title": "Essential",
-                    "icon": "https://static.essential.gg/icon/256x256.png",
-                    "description": "Essential is a quality of life mod that boosts Minecraft Java to the next level."
-                } // info isn't yet implemented
-            }
-        ]
-    }
-    ```
-
-    The mod types are `cf`, `mr` and `url`
-
-    You can get a mod slug and id from curseforge from the mod url:
-    * https://www.curseforge.com/minecraft/mc-mods/worldedit/download/4586218 -> worldedit, 4586218
-    * https://modrinth.com/mod/sodium/version/mc1.20.1-0.5.1 -> sodium
-
-    To get the mod name, go to downloads -> the jar file and copy download link:
-    * https://mediafilez.forgecdn.net/files/4586/218/worldedit-mod-7.2.15.jar -> worldedit-mod-7.2.15.jar
-    * https://cdn-raw.modrinth.com/data/AANobbMI/versions/OkwCNtFH/sodium-fabric-mc1.20.1-0.5.1.jar -> AANobbMIOkwCNtFH, sodium-fabric-mc1.20.1-0.5.1.jar
-
-    Make sure 'name' is ascii: `%20` instead of a space
-
-    :param install_path: The base path everything should be installed to
-    :param confirm: If the user should confirm the download
-    """
-
-    # Import the manifest file
-    with open(manifest_file) as json_file:
-        manifest: dict[str, Any] = load(json_file)
-
-    # Check for validity
-    if manifest.get('minecraft', None) is None:
-        raise KeyError("The modpack must include a 'minecraft' section.")
-    if manifest['minecraft'].get('version', None) is None:
-        raise KeyError(
-            "The 'minecraft' section must include the minecraft version.")
-    if manifest['minecraft'].get('modloader', None) is None or \
-            '-' not in manifest['minecraft']['modloader']:
-        raise KeyError(
-            "The 'minecraft' section must include the modloader " +
-            "and version in this format: 'modloader-x.x.x'")
-
-    # List the modpack info
-    modpack_version: str = manifest['minecraft']['version']
-    modloader: str = manifest['minecraft']['modloader'].split(
-        '-', maxsplit=1)[0]
-    modloader_version: str = manifest['minecraft']['modloader'].split(
-        '-', maxsplit=1)[1]
-
-    print(f"Modpack version: {modpack_version}\n" +
-          f"Mod loader: {modloader}\n"
-          f"Mod loader version: {modloader_version}")
-
-    # The headers to mimic a common browser user agent
-    global headers
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-    }
-    total_size = 0
-
-    if manifest.get('mods', None) is not None:
-        total_size = prepare_mods(total_size, install_path, manifest['mods'])
-
-    print(
-        f"\n{len(manifest.get('mods', []))} mods, 0 recourcepacks, 0 shaderpacks\n" +
-        f"Total file size: {filesize.size(total_size, system=filesize.alternative)}")  # type: ignore
-
-    # Ask for confirmation if confirm is True and install all modpacks
-    if confirm == True:
-        if input("Continue? (Y/n) ").lower() not in ['y', '']:
-            print("Cancelling...\n")
-            exit()
-    else:
-        print("Continue (Y/n) ")
+def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]]):
+    """Download all files with a tqdm loading bar"""
+    if not path.isdir(path.join(install_path, 'mods')):
+        mkdir(path.join(install_path, 'mods'))
 
     print('\033[?25l')  # Hide the cursor
     skipped_mods = 0
-
-    # Download all files
-    if not path.isdir(path.join(install_path, 'mods')):
-        mkdir(path.join(install_path, 'mods'))
 
     with tqdm(
         total=total_size,
@@ -205,7 +77,7 @@ def install(manifest_file: str, install_path: str = '', confirm: bool = False) -
     ) as outer_bar:
         for url, fname in (inner_bar := tqdm(
                 [mod['_']
-                    for mod in manifest.get('mods', {})],
+                    for mod in mods],
                 position=0,
                 unit='B',
                 unit_scale=True,
@@ -277,7 +149,89 @@ def install(manifest_file: str, install_path: str = '', confirm: bool = False) -
 
     print(' ' * (get_terminal_size().columns) + '\r', end='')
     print(
-        f"Skipped {skipped_mods}/{len(manifest.get('mods', []))} mods" if skipped_mods != 0 else '')
+        f"Skipped {skipped_mods}/{len(mods)} mods that were already installed" if skipped_mods != 0 else '\n')
 
 
-install('manifest.json')
+def install(manifest_file: str, install_path: str = '', confirm: bool = True) -> None:
+    """
+    Install a list of mods, resourcepacks, shaderpacks and config files. Arguments:
+
+    :param manifest_file: This should be a path to a
+    manifest file. The file structure:
+
+    ```json
+    {
+        "minecraft": {
+            "version": "(version)",
+            "modloader": "(modloader)-(modloader version)"
+        },
+        "mods": [
+            {
+                "type": "(type)",
+                "slug": "(slug)",
+                "name": "(filename)"
+            }
+        ]
+    }
+    ```
+
+    :param install_path: The base path everything should be installed to
+    :param confirm: If the user should confirm the download
+    """
+
+    # Import the manifest file
+    with open(manifest_file) as json_file:
+        manifest: dict[str, Any] = load(json_file)
+
+    # Check for validity
+    if manifest.get('minecraft', None) is None:
+        raise KeyError("The modpack must include a 'minecraft' section.")
+    if manifest['minecraft'].get('version', None) is None:
+        raise KeyError(
+            "The 'minecraft' section must include the minecraft version.")
+    if manifest['minecraft'].get('modloader', None) is None or \
+            '-' not in manifest['minecraft']['modloader']:
+        raise KeyError(
+            "The 'minecraft' section must include the modloader " +
+            "and version in this format: 'modloader-x.x.x'")
+
+    # List the modpack info
+    modpack_version: str = manifest['minecraft']['version']
+    modloader: str = manifest['minecraft']['modloader'].split(
+        '-', maxsplit=1)[0]
+    modloader_version: str = manifest['minecraft']['modloader'].split(
+        '-', maxsplit=1)[1]
+
+    print(f"Modpack version: {modpack_version}\n" +
+          f"Mod loader: {modloader}\n"
+          f"Mod loader version: {modloader_version}")
+
+    # The headers to mimic a common browser user agent
+    global headers
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+    }
+    total_size = 0
+
+    if manifest.get('mods', None) is not None:
+        total_size = prepare_mods(total_size, install_path, manifest['mods'])
+
+    print(
+        f"\n{len(manifest.get('mods', []))} mods, 0 recourcepacks, 0 shaderpacks\n" +
+        f"Total file size: {filesize.size(total_size, system=filesize.alternative)}")  # type: ignore
+
+    # Ask for confirmation if confirm is True and install all modpacks
+    if confirm == True:
+        if input("Continue? (Y/n) ").lower() not in ['y', '']:
+            print("Cancelling...\n")
+            exit()
+    else:
+        print("Continue (Y/n) ")
+
+    # Download all files
+    download_files(total_size, install_path, manifest.get('mods', []))
