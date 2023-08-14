@@ -86,9 +86,12 @@ def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]
                 bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
                 leave=False)):
             if not path.isfile(fname):
+                description = f"{parse.unquote(path.basename(fname))} is already installed, skipping..."
+                if len(description) > get_terminal_size().columns:
+                    description = description[:get_terminal_size().columns]
+
+                outer_bar.set_description_str(description)
                 try:
-                    outer_bar.set_description_str(
-                        f"Installing {parse.unquote(path.basename(fname))}...")
                     with request.urlopen(url) as resp:
                         with open(fname, 'wb') as mod_file:
                             while True:
@@ -111,8 +114,12 @@ def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]
 
             else:
                 skipped_mods += 1
-                outer_bar.set_description_str(
-                    f"{parse.unquote(path.basename(fname))} is already installed, skipping...")
+
+                description = f"Installing {parse.unquote(path.basename(fname))}..."
+                if len(description) > get_terminal_size().columns:
+                    description = description[:get_terminal_size().columns]
+
+                outer_bar.set_description_str(description)
 
                 # Get the content-length headers (again) to update the bar
                 try:
@@ -149,7 +156,7 @@ def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]
 
     print(' ' * (get_terminal_size().columns) + '\r', end='')
     print(
-        f"Skipped {skipped_mods}/{len(mods)} mods that were already installed" if skipped_mods != 0 else '\n')
+        f"Skipped {skipped_mods}/{len(mods)} mods that were already installed" if skipped_mods != 0 else '')
 
 
 def install(manifest_file: str, install_path: str = '', confirm: bool = True) -> None:
