@@ -3,7 +3,7 @@ Minecraft modpack manager
 
 This is what the file structure of an .mcm file should be:
 
-```jsonc
+```json
 {
     "minecraft": {
         "version": "(version)",
