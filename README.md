@@ -65,4 +65,4 @@ To get the mod name, go to downloads -> the jar file and copy download link:
 * https://mediafilez.forgecdn.net/files/4586/218/worldedit-mod-7.2.15.jar -> worldedit-mod-7.2.15.jar
 * https://cdn-raw.modrinth.com/data/AANobbMI/versions/OkwCNtFH/sodium-fabric-mc1.20.1-0.5.1.jar -> AANobbMIOkwCNtFH, sodium-fabric-mc1.20.1-0.5.1.jar
 
-Make sure 'name' is ascii: `%20` instead of a space
+Make sure 'name' is ascii encoded: `%20` instead of a space
