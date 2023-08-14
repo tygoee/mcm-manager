@@ -1,69 +1,11 @@
 from json import load
 from os import path, get_terminal_size, mkdir
-
-from typing import Any
-from urllib import parse, request, error
 from tqdm import tqdm
-import filesize
+from typing import Any
+from install import filesize, mods
 
 
-def prepare_mods(total_size: int, install_path: str, mods: list[dict[str, Any]]) -> int:
-    """Get the `content-length` headers while listing all mods"""
-
-    # Check for the json file validity
-    for mod in mods:
-        for key in ['type', 'slug', 'name']:
-            if key not in mod:
-                raise KeyError(
-                    f"The '{key}' key should be specified in the following mod: {mod}.")
-        if mod['type'] not in ['cf', 'mr', 'url']:
-            raise KeyError(
-                f"The mod type '{mod['type']}' does not exist: {mod}.")
-
-    # List the installed mods and prepare the modpack
-    print("\nMods:")
-
-    for mod in mods:
-        # Add the corresponding url to mod['_']
-        match mod['type']:
-            case 'cf':
-                url = f"https://mediafilez.forgecdn.net/files/{int(str(mod['id'])[:4])}/{int(str(mod['id'])[4:])}/{mod['name']}"
-                mod['_'] = (url, path.join(install_path,
-                                           'mods', parse.unquote(mod['name'])))
-            case 'mr':
-                url = f"https://cdn-raw.modrinth.com/data/{mod['id'][:8]}/versions/{mod['id'][8:]}/{mod['name']}"
-                mod['_'] = (url, path.join(install_path,
-                                           'mods', parse.unquote(mod['name'])))
-            case 'url':
-                url = mod['link']
-                mod['_'] = (url, path.join(install_path,
-                                           'mods', parse.unquote(mod['name'])))
-            case _:
-                raise KeyError(
-                    f"The mod type '{mod['type']}' does not exist.")
-
-        # Recieve the content-length headers
-        try:
-            size = int(request.urlopen(
-                url).headers.get('content-length', 0))
-            mod['_'] += (size,)
-            total_size += size
-        except error.HTTPError:
-            # When returning an HTTP error, try again
-            # while mimicking a common browser user agent
-            size = int(request.urlopen(request.Request(url,
-                                                       headers=headers)).headers.get('content-length', 0))
-            mod['_'] += (size,)
-            total_size += size
-
-        # Print the mod name
-        print(f"  {mod['slug']} ({parse.unquote(mod['name'])})")
-
-    # At the end, return the total mods size
-    return total_size
-
-
-def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]]):
+def download_files(total_size: int, install_path: str, mod_list: list[dict[str, Any]]):
     """Download all files with a tqdm loading bar"""
     if not path.isdir(path.join(install_path, 'mods')):
         mkdir(path.join(install_path, 'mods'))
@@ -80,53 +22,16 @@ def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]
         bar_format='{desc}'
     ) as outer_bar:
         for url, fname, size in (inner_bar := tqdm(
-                [mod['_']
-                    for mod in mods],
-                position=0,
-                unit='B',
-                unit_scale=True,
-                total=total_size,
-                unit_divisor=1024,
-                bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
+            [mod['_'] for mod in mod_list],
+            position=0,
+            unit='B',
+            unit_scale=True,
+            total=total_size,
+            unit_divisor=1024,
+            bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
                 leave=False)):
-            if not path.isfile(fname):
-                description = f"Installing {parse.unquote(path.basename(fname))}..."
-                if len(description) > get_terminal_size().columns:
-                    description = description[:get_terminal_size().columns]
-
-                outer_bar.set_description_str(description)
-                try:
-                    with request.urlopen(url) as resp:
-                        with open(fname, 'wb') as mod_file:
-                            while True:
-                                data = resp.read(1024)
-                                if not data:
-                                    break
-                                size = mod_file.write(data)
-                                inner_bar.update(size)
-                                inner_bar.refresh()
-                except error.HTTPError:
-                    with request.urlopen(request.Request(url, headers=headers)) as resp:
-                        with open(fname, 'wb') as mod_file:
-                            while True:
-                                data = resp.read(1024)
-                                if not data:
-                                    break
-                                size = mod_file.write(data)
-                                inner_bar.update(size)
-                                inner_bar.refresh()
-
-            else:
-                skipped_mods += 1
-
-                description = f"{parse.unquote(path.basename(fname))} is already installed, skipping..."
-                if len(description) > get_terminal_size().columns:
-                    description = description[:get_terminal_size().columns]
-
-                outer_bar.set_description_str(description)
-
-                inner_bar.update(size)
-                inner_bar.refresh()
+            skipped_mods = mods.download_mods(  # type: ignore
+                url, fname, size, skipped_mods, outer_bar, inner_bar)
 
     print('\033[2A\033[?25h')  # Go two lines back and show cursor
 
@@ -151,10 +56,10 @@ def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]
 
     print(' ' * (get_terminal_size().columns) + '\r', end='')
     print(
-        f"Skipped {skipped_mods}/{len(mods)} mods that were already installed" if skipped_mods != 0 else '')
+        f"Skipped {skipped_mods}/{len(mod_list)} mods that were already installed" if skipped_mods != 0 else '')
 
 
-def install(manifest_file: str, install_path: str = '', confirm: bool = True) -> None:
+def install(manifest_file: str, install_path: str = path.dirname(path.realpath(__file__)), confirm: bool = True) -> None:
     """
     Install a list of mods, resourcepacks, shaderpacks and config files. Arguments:
 
@@ -208,20 +113,11 @@ def install(manifest_file: str, install_path: str = '', confirm: bool = True) ->
           f"Mod loader: {modloader}\n"
           f"Mod loader version: {modloader_version}")
 
-    # The headers to mimic a common browser user agent
-    global headers
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-    }
     total_size = 0
 
     if manifest.get('mods', None) is not None:
-        total_size = prepare_mods(total_size, install_path, manifest['mods'])
+        total_size = mods.prepare_mods(
+            total_size, install_path, manifest['mods'])
 
     print(
         f"\n{len(manifest.get('mods', []))} mods, 0 recourcepacks, 0 shaderpacks\n" +
@@ -237,3 +133,6 @@ def install(manifest_file: str, install_path: str = '', confirm: bool = True) ->
 
     # Download all files
     download_files(total_size, install_path, manifest.get('mods', []))
+
+
+install(path.join(path.dirname(path.realpath(__file__)), 'example-manifest.json'))
