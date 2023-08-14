@@ -437,6 +437,24 @@
         },
         {
             "type": "cf",
+            "slug": "kambrik",
+            "name": "Kambrik-6.1.1%2B1.20.1-forge.jar",
+            "id": 4654401
+        },
+        {
+            "type": "cf",
+            "slug": "kiwi",
+            "name": "Kiwi-1.20.1-forge-11.1.1.jar",
+            "id": 4688568
+        },
+        {
+            "type": "cf",
+            "slug": "kotlin-for-forge",
+            "name": "kotlinforforge-4.4.0-all.jar",
+            "id": 4630525
+        },
+        {
+            "type": "cf",
             "slug": "let-sleeping-dogs-lie",
             "name": "LetSleepingDogsLie-1.20.1-Forge-1.2.0.jar",
             "id": 4618816
@@ -638,6 +656,18 @@
             "slug": "structory",
             "name": "Structory_1.20.1_v1.3.2.jar",
             "id": 4630983
+        },
+        {
+            "type": "cf",
+            "slug": "supermartijn642s-config-lib",
+            "name": "supermartijn642configlib-1.1.7-forge-mc1.20.jar",
+            "id": 4629797
+        },
+        {
+            "type": "cf",
+            "slug": "supermartijn642s-core-lib",
+            "name": "supermartijn642corelib-1.1.12a-forge-mc1.20.jar",
+            "id": 4663719
         },
         {
             "type": "cf",
