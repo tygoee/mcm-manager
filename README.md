@@ -2,7 +2,7 @@
 
 This is what the file structure of an .mcm file should be:
 
-```json
+```jsonc
 {
     "minecraft": {
         "version": "(version)",
