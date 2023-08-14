@@ -44,13 +44,17 @@ def prepare_mods(total_size: int, install_path: str, mods: list[dict[str, Any]])
 
         # Recieve the content-length headers
         try:
-            total_size += int(request.urlopen(
+            size = int(request.urlopen(
                 url).headers.get('content-length', 0))
+            mod['_'] += (size,)
+            total_size += size
         except error.HTTPError:
             # When returning an HTTP error, try again
             # while mimicking a common browser user agent
-            total_size += int(request.urlopen(request.Request(url,
-                              headers=headers)).headers.get('content-length', 0))
+            size = int(request.urlopen(request.Request(url,
+                                                       headers=headers)).headers.get('content-length', 0))
+            mod['_'] += (size,)
+            total_size += size
 
         # Print the mod name
         print(f"  {mod['slug']} ({parse.unquote(mod['name'])})")
@@ -75,7 +79,7 @@ def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]
         unit_divisor=1024,
         bar_format='{desc}'
     ) as outer_bar:
-        for url, fname in (inner_bar := tqdm(
+        for url, fname, size in (inner_bar := tqdm(
                 [mod['_']
                     for mod in mods],
                 position=0,
@@ -86,7 +90,7 @@ def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]
                 bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
                 leave=False)):
             if not path.isfile(fname):
-                description = f"{parse.unquote(path.basename(fname))} is already installed, skipping..."
+                description = f"Installing {parse.unquote(path.basename(fname))}..."
                 if len(description) > get_terminal_size().columns:
                     description = description[:get_terminal_size().columns]
 
@@ -115,22 +119,13 @@ def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]
             else:
                 skipped_mods += 1
 
-                description = f"Installing {parse.unquote(path.basename(fname))}..."
+                description = f"{parse.unquote(path.basename(fname))} is already installed, skipping..."
                 if len(description) > get_terminal_size().columns:
                     description = description[:get_terminal_size().columns]
 
                 outer_bar.set_description_str(description)
 
-                # Get the content-length headers (again) to update the bar
-                try:
-                    inner_bar.update(int(request.urlopen(
-                        url).headers.get('content-length', 0)))
-                except error.HTTPError:
-                    # When returning an HTTP error, try again
-                    # while mimicking a common browser user agent
-                    inner_bar.update(int(request.urlopen(request.Request(
-                        url, headers=headers)).headers.get('content-length', 0)))
-
+                inner_bar.update(size)
                 inner_bar.refresh()
 
     print('\033[2A\033[?25h')  # Go two lines back and show cursor
