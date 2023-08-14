@@ -1,5 +1,4 @@
-# mcm-manager
-Minecraft modpack manager
+# Minecraft Modpack Manager
 
 This is what the file structure of an .mcm file should be:
 
