@@ -63,8 +63,7 @@ def install(manifest_file: str, install_path: str = path.dirname(path.realpath(_
     """
     Install a list of mods, resourcepacks, shaderpacks and config files. Arguments:
 
-    :param manifest_file: This should be a path to a
-    manifest file. The file structure:
+    :param manifest_file: This should be a path to a manifest file. The file structure:
 
     ```json
     {

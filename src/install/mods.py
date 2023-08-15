@@ -3,6 +3,7 @@ from tqdm import tqdm
 from typing import Any
 from urllib import parse, request, error
 from install.headers import headers
+from install.url_generator import generate_url
 
 
 def prepare_mods(total_size: int, install_path: str, mod_list: list[dict[str, Any]]) -> int:
@@ -23,22 +24,7 @@ def prepare_mods(total_size: int, install_path: str, mod_list: list[dict[str, An
 
     for mod in mod_list:
         # Add the corresponding url to mod['_']
-        match mod['type']:
-            case 'cf':
-                url = f"https://mediafilez.forgecdn.net/files/{int(str(mod['id'])[:4])}/{int(str(mod['id'])[4:])}/{mod['name']}"
-                mod['_'] = (url, path.join(install_path,
-                                           'mods', parse.unquote(mod['name'])))
-            case 'mr':
-                url = f"https://cdn-raw.modrinth.com/data/{mod['id'][:8]}/versions/{mod['id'][8:]}/{mod['name']}"
-                mod['_'] = (url, path.join(install_path,
-                                           'mods', parse.unquote(mod['name'])))
-            case 'url':
-                url = mod['link']
-                mod['_'] = (url, path.join(install_path,
-                                           'mods', parse.unquote(mod['name'])))
-            case _:
-                raise KeyError(
-                    f"The mod type '{mod['type']}' does not exist.")
+        url, mod['_'] = generate_url(mod, install_path, 'mods')
 
         # Recieve the content-length headers
         try:
