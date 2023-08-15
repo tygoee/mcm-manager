@@ -1,11 +1,14 @@
 from json import load
 from os import path, get_terminal_size, mkdir
 from tqdm import tqdm
-from typing import Any
+from typing import Any, TypeAlias
 from install import filesize, media
 
+MediaList: TypeAlias = list[dict[str, Any]]
+Media: TypeAlias = dict[str, Any]
 
-def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]], resourcepacks: list[dict[str, Any]]):
+
+def download_files(total_size: int, install_path: str, mods: MediaList, resourcepacks: MediaList):
     """Download all files with a tqdm loading bar"""
     if not path.isdir(path.join(install_path, 'mods')):
         mkdir(path.join(install_path, 'mods'))
@@ -80,6 +83,20 @@ def install(manifest_file: str, install_path: str = path.dirname(path.realpath(_
                 "slug": "(slug)",
                 "name": "(filename)"
             }
+        ],
+        "resourcepacks": [
+            {
+                "type": "(type)",
+                "slug": "(slug)",
+                "name": "(filename)"
+            }
+        ],
+        "shaderpacks": [
+            {
+                "type": "(type)",
+                "slug": "(slug)",
+                "name": "(filename)"
+            }
         ]
     }
     ```
@@ -90,7 +107,7 @@ def install(manifest_file: str, install_path: str = path.dirname(path.realpath(_
 
     # Import the manifest file
     with open(manifest_file) as json_file:
-        manifest: dict[str, Any] = load(json_file)
+        manifest: Media = load(json_file)
 
     # Check for validity
     if manifest.get('minecraft', None) is None:

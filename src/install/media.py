@@ -1,15 +1,18 @@
 from os import path, get_terminal_size
 from tqdm import tqdm
-from typing import Any
+from typing import Any, TypeAlias
 from urllib import parse, request, error
 from install.headers import headers
 from install.url_generator import generate_url
 
+MediaList: TypeAlias = list[dict[str, Any]]
+Media: TypeAlias = dict[str, Any]
 
-def prepare_media(total_size: int, install_path: str, mods: list[dict[str, Any]], resourcepacks: list[dict[str, Any]]) -> int:
+
+def prepare_media(total_size: int, install_path: str, mods: MediaList, resourcepacks: MediaList) -> int:
     """Get the file size and check media validity while listing all media"""
 
-    def check_media_validity(media_list: list[dict[str, Any]], media_type: str) -> None:
+    def check_media_validity(media_list: MediaList, media_type: str) -> None:
         """Check for the modpack file validity"""
         for media in media_list:
             for key in ['type', 'slug', 'name']:
@@ -20,7 +23,7 @@ def prepare_media(total_size: int, install_path: str, mods: list[dict[str, Any]]
                 raise KeyError(
                     f"The type '{media['type']}' does not exist: {media}.")
 
-    def get_headers(media: dict[str, Any], total_size: int) -> int:
+    def get_headers(media: Media, total_size: int) -> int:
         """Recieve the content-length headers"""
         try:
             size = int(request.urlopen(

@@ -2,7 +2,9 @@
 
 from typing import TypeAlias
 
-traditional: list[tuple[int, str | tuple[str, str]]] = [
+SizeSystem: TypeAlias = list[tuple[int, str | tuple[str, str]]]
+
+traditional: SizeSystem = [
     (1024 ** 5, 'P'),
     (1024 ** 4, 'T'),
     (1024 ** 3, 'G'),
@@ -11,7 +13,7 @@ traditional: list[tuple[int, str | tuple[str, str]]] = [
     (1024 ** 0, 'B'),
 ]
 
-alternative: list[tuple[int, str | tuple[str, str]]] = [
+alternative: SizeSystem = [
     (1024 ** 5, ' PB'),
     (1024 ** 4, ' TB'),
     (1024 ** 3, ' GB'),
@@ -20,7 +22,7 @@ alternative: list[tuple[int, str | tuple[str, str]]] = [
     (1024 ** 0, (' byte', ' bytes')),
 ]
 
-verbose: list[tuple[int, str | tuple[str, str]]] = [
+verbose: SizeSystem = [
     (1024 ** 5, (' petabyte', ' petabytes')),
     (1024 ** 4, (' terabyte', ' terabytes')),
     (1024 ** 3, (' gigabyte', ' gigabytes')),
@@ -29,7 +31,7 @@ verbose: list[tuple[int, str | tuple[str, str]]] = [
     (1024 ** 0, (' byte', ' bytes')),
 ]
 
-iec: list[tuple[int, str | tuple[str, str]]] = [
+iec: SizeSystem = [
     (1024 ** 5, 'Pi'),
     (1024 ** 4, 'Ti'),
     (1024 ** 3, 'Gi'),
@@ -38,7 +40,7 @@ iec: list[tuple[int, str | tuple[str, str]]] = [
     (1024 ** 0, ''),
 ]
 
-si: list[tuple[int, str | tuple[str, str]]] = [
+si: SizeSystem = [
     (1000 ** 5, 'P'),
     (1000 ** 4, 'T'),
     (1000 ** 3, 'G'),
@@ -47,10 +49,8 @@ si: list[tuple[int, str | tuple[str, str]]] = [
     (1000 ** 0, 'B'),
 ]
 
-size_system: TypeAlias = list[tuple[int, str | tuple[str, str]]]
 
-
-def size(bytes: int, system: size_system) -> str:
+def size(bytes: int, system: SizeSystem) -> str:
     """Human-readable file size.
 
     Using the traditional system, where a factor of 1024 is used::

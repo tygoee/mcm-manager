@@ -1,9 +1,11 @@
 from os import path
-from typing import Any
+from typing import Any, TypeAlias
 from urllib import parse
 
+Media: TypeAlias = dict[str, Any]
 
-def generate_url(media: dict[str, Any], install_path: str, folder: str) -> tuple[str, tuple[str, str]]:
+
+def generate_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[str, str]]:
     """Generate an url to download"""
 
     match media['type']:
