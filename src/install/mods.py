@@ -15,7 +15,7 @@ def prepare_mods(total_size: int, install_path: str, mod_list: list[dict[str, An
             if key not in mod:
                 raise KeyError(
                     f"The '{key}' key should be specified in the following mod: {mod}.")
-        if mod['type'] not in ['cf', 'mr', 'url']:
+        if mod['type'] not in ['cf', 'mr', 'pm', 'url']:
             raise KeyError(
                 f"The mod type '{mod['type']}' does not exist: {mod}.")
 
