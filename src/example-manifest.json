@@ -771,5 +771,61 @@
             "name": "weaponmaster-multi-forge-1.20.1-3.0.5.jar",
             "id": 4601290
         }
+    ],
+    "resourcepacks": [
+        {
+            "type": "cf",
+            "slug": "renewedmenu",
+            "name": "%c2%a78%c2%a7l%c2%a7nRenewed%c2%a77%c2%a7l%c2%a7nMen%c3%b9%c2%a7rv3.2.zip",
+            "id": 4600569
+        },
+        {
+            "type": "pm",
+            "slug": "xxvi-s-better-cauldrons",
+            "name": "better-cauldrons.zip",
+            "media": "texture"
+        },
+        {
+            "type": "cf",
+            "slug": "hunger-preview",
+            "name": "hunger-preview-1.20.1.zip",
+            "id": 4695577
+        },
+        {
+            "type": "cf",
+            "slug": "icons",
+            "name": "Icons+v.1.8.zip",
+            "id": 4602944
+        },
+        {
+            "type": "cf",
+            "slug": "shieldcorrections",
+            "name": "Shield+Corrections+%5bColored%5d.zip",
+            "id": 4589920
+        },
+        {
+            "type": "cf",
+            "slug": "soft-weather",
+            "name": "Soft-Weather-1.0-1.20.zip",
+            "id": 4666175
+        },
+        {
+            "type": "pm",
+            "slug": "soulful-debris-visible-ancient-debris",
+            "name": "soulful-debris.zip",
+            "media": "texture"
+        },
+        {
+            "type": "pm",
+            "slug": "1-13-1-16-unique-spawn-eggs",
+            "name": "unique-spawn-eggs-v1-5.zip",
+            "media": "texture"
+        },
+        {
+            "type": "cf",
+            "slug": "xalis-bushy-leaves",
+            "name": "xali%27s+Bushy+Leaves+v3.4.1.zip",
+            "id": 4677561
+        }
     ]
 }

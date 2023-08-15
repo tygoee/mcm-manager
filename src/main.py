@@ -2,16 +2,18 @@ from json import load
 from os import path, get_terminal_size, mkdir
 from tqdm import tqdm
 from typing import Any
-from install import filesize, mods
+from install import filesize, media
 
 
-def download_files(total_size: int, install_path: str, mod_list: list[dict[str, Any]]):
+def download_files(total_size: int, install_path: str, mods: list[dict[str, Any]], resourcepacks: list[dict[str, Any]]):
     """Download all files with a tqdm loading bar"""
     if not path.isdir(path.join(install_path, 'mods')):
         mkdir(path.join(install_path, 'mods'))
+    if not path.isdir(path.join(install_path, 'resourcepacks')):
+        mkdir(path.join(install_path, 'resourcepacks'))
 
     print('\033[?25l')  # Hide the cursor
-    skipped_mods = 0
+    skipped_files = 0
 
     with tqdm(
         total=total_size,
@@ -22,7 +24,8 @@ def download_files(total_size: int, install_path: str, mod_list: list[dict[str, 
         bar_format='{desc}'
     ) as outer_bar:
         for url, fname, size in (inner_bar := tqdm(
-            [mod['_'] for mod in mod_list],
+            [mod['_'] for mod in mods] +
+            [resourcepack['_'] for resourcepack in resourcepacks],
             position=0,
             unit='B',
             unit_scale=True,
@@ -30,8 +33,8 @@ def download_files(total_size: int, install_path: str, mod_list: list[dict[str, 
             unit_divisor=1024,
             bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
                 leave=False)):
-            skipped_mods = mods.download_mods(  # type: ignore
-                url, fname, size, skipped_mods, outer_bar, inner_bar)
+            skipped_files = media.download_media(  # type: ignore
+                url, fname, size, skipped_files, outer_bar, inner_bar)
 
     print('\033[2A\033[?25h')  # Go two lines back and show cursor
 
@@ -56,7 +59,7 @@ def download_files(total_size: int, install_path: str, mod_list: list[dict[str, 
 
     print(' ' * (get_terminal_size().columns) + '\r', end='')
     print(
-        f"Skipped {skipped_mods}/{len(mod_list)} mods that were already installed" if skipped_mods != 0 else '')
+        f"Skipped {skipped_files}/{len(mods) + len(resourcepacks)} files that were already installed" if skipped_files != 0 else '')
 
 
 def install(manifest_file: str, install_path: str = path.dirname(path.realpath(__file__)), confirm: bool = True) -> None:
@@ -114,12 +117,11 @@ def install(manifest_file: str, install_path: str = path.dirname(path.realpath(_
 
     total_size = 0
 
-    if manifest.get('mods', None) is not None:
-        total_size = mods.prepare_mods(
-            total_size, install_path, manifest['mods'])
+    total_size = media.prepare_media(
+        total_size, install_path, manifest.get('mods', []), manifest.get('resourcepacks', []))
 
     print(
-        f"\n{len(manifest.get('mods', []))} mods, 0 recourcepacks, 0 shaderpacks\n" +
+        f"\n{len(manifest.get('mods', []))} mods, {len(manifest.get('resourcepacks', []))} recourcepacks, 0 shaderpacks\n" +
         f"Total file size: {filesize.size(total_size, system=filesize.alternative)}")  # type: ignore
 
     # Ask for confirmation if confirm is True and install all modpacks
@@ -131,7 +133,8 @@ def install(manifest_file: str, install_path: str = path.dirname(path.realpath(_
         print("Continue (Y/n) ")
 
     # Download all files
-    download_files(total_size, install_path, manifest.get('mods', []))
+    download_files(total_size, install_path, manifest.get(
+        'mods', []), manifest.get('resourcepacks', []))
 
 
 install(path.join(path.dirname(path.realpath(__file__)), 'example-manifest.json'))
