@@ -99,7 +99,7 @@ def install(manifest_file: str, install_path: str = path.dirname(path.realpath(_
 if __name__ == '__main__':
     if (mcm_location := input("Manifest file location (default: example-manifest.json): ")) == '':
         mcm_location = path.join(path.dirname(
-            path.realpath(__file__)), 'example-manifest.json')
+            path.realpath(__file__)), '..', 'share', 'modpacks', 'example-manifest.json')
 
     if (install_location := input("Install location (default: current directory): ")) == '':
         install(mcm_location)
