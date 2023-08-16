@@ -84,6 +84,15 @@ def install(manifest_file: str,
     total_size = media.prepare_media(
         0, install_path, mods, resourcepacks, shaderpacks)
 
+    # Give warnings for external sources
+    external_media: MediaList = [_media for _media in [mod for mod in mods] + [resourcepack for resourcepack in resourcepacks] +
+                                 [shaderpack for shaderpack in shaderpacks] if _media['type'] == 'url']
+    if len(external_media) != 0:
+        print("\nWARNING! Some mods/resourcepacks/shaderpacks are from external sources and could harm your system:")
+        for _media in external_media:
+            print(f"  {_media['slug']} ({_media['name']}): {_media['link']}")
+
+    # Print the mod info
     print(
         f"\n{len(mods)} mods, {len(resourcepacks)} " +
         f"recourcepacks, {len(shaderpacks)} shaderpacks\n" +
@@ -112,6 +121,8 @@ if __name__ == '__main__':
             path.realpath(__file__)), '..', 'share', '.minecraft')
         if not path.isdir(install_location):
             mkdir(install_location)
+        print('\n', end='')
         install(mcm_location)
     else:
+        print('\n', end='')
         install(mcm_location, install_location)
