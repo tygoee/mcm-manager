@@ -108,8 +108,10 @@ if __name__ == '__main__':
             path.realpath(__file__)), '..', 'share', 'modpacks', 'example-manifest.json')
 
     if (install_location := input("Install location (default: share/.minecraft): ")) == '':
-        mkdir(path.join(path.dirname(path.realpath(__file__)),
-              '..', 'share', '.minecraft'))
+        install_location = path.join(path.dirname(
+            path.realpath(__file__)), '..', 'share', '.minecraft')
+        if not path.isdir(install_location):
+            mkdir(install_location)
         install(mcm_location)
     else:
         install(mcm_location, install_location)
