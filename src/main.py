@@ -1,70 +1,10 @@
 from json import load
-from os import path, get_terminal_size, mkdir
-from tqdm import tqdm
+from os import path
 from typing import Any, TypeAlias
 from install import filesize, media
 
 MediaList: TypeAlias = list[dict[str, Any]]
 Media: TypeAlias = dict[str, Any]
-
-
-def download_files(total_size: int, install_path: str, mods: MediaList,
-                   resourcepacks: MediaList, shaderpacks: MediaList) -> None:
-    """Download all files using a tqdm loading bar"""
-
-    for folder, media_list in {'mods': mods, 'resourcepacks': resourcepacks, 'shaderpacks': shaderpacks}.items():
-        if len(media_list) != 0 and not path.isdir(path.join(install_path, folder)):
-            mkdir(path.join(install_path, folder))
-
-    print('\033[?25l')  # Hide the cursor
-    skipped_files = 0
-
-    with tqdm(
-        total=total_size,
-        position=1,
-        unit='B',
-        unit_scale=True,
-        unit_divisor=1024,
-        bar_format='{desc}'
-    ) as outer_bar:
-        for url, fname, size in (inner_bar := tqdm(
-            [mod['_'] for mod in mods] +
-            [resourcepack['_'] for resourcepack in resourcepacks] +
-            [shaderpack['_'] for shaderpack in shaderpacks],
-            position=0,
-            unit='B',
-            unit_scale=True,
-            total=total_size,
-            unit_divisor=1024,
-            bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
-                leave=False)):
-            skipped_files = media.download_media(  # type: ignore
-                url, fname, size, skipped_files, outer_bar, inner_bar)
-
-    print('\033[2A\033[?25h')  # Go two lines back and show cursor
-
-    # Make a new bar that directly updates to 100% as
-    # the last one will dissapear after the loop is done
-    if total_size != 0:
-        with tqdm(
-            total=total_size,
-            unit='B',
-            unit_scale=True,
-            unit_divisor=1024,
-            bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}'
-        ) as bar:
-            bar.update(total_size)
-    else:
-        with tqdm(
-            total=1,
-            unit='it',
-            bar_format='{percentage:3.0f}%|{bar}| 0.00/0.00'
-        ) as bar:
-            bar.update(1)
-
-    print(' ' * (get_terminal_size().columns) + '\r', end='')
-    print(
-        f"Skipped {skipped_files}/{len(mods) + len(resourcepacks) + len(shaderpacks)} files that were already installed" if skipped_files != 0 else '')
 
 
 def install(manifest_file: str, install_path: str = path.dirname(path.realpath(__file__)), confirm: bool = True) -> None:
@@ -152,8 +92,8 @@ def install(manifest_file: str, install_path: str = path.dirname(path.realpath(_
         print("Continue (Y/n) ")
 
     # Download all files
-    download_files(total_size, install_path, manifest.get('mods', []),
-                   manifest.get('resourcepacks', []), manifest.get('shaderpacks', []))
+    media.download_files(total_size, install_path, manifest.get('mods', []),
+                         manifest.get('resourcepacks', []), manifest.get('shaderpacks', []))
 
 
 if __name__ == '__main__':

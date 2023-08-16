@@ -1,4 +1,4 @@
-from os import path, get_terminal_size
+from os import path, get_terminal_size, mkdir
 from tqdm import tqdm
 from typing import Any, TypeAlias
 from urllib import parse, request, error
@@ -96,46 +96,96 @@ def prepare_media(total_size: int, install_path: str, mods: MediaList,
     return total_size
 
 
-def download_media(url: str, fname: str, size: int, skipped_files: int,
-                   outer_bar: tqdm, inner_bar: tqdm) -> int:  # type: ignore
-    if not path.isfile(fname):
-        description = f"Installing {parse.unquote(path.basename(fname))}..."
-        if len(description) > get_terminal_size().columns:
-            description = description[:get_terminal_size().columns]
+def download_files(total_size: int, install_path: str, mods: MediaList,
+                   resourcepacks: MediaList, shaderpacks: MediaList) -> None:
+    """Download all files using a tqdm loading bar"""
 
-        outer_bar.set_description_str(description)
-        try:
-            with request.urlopen(url) as resp:
-                with open(fname, 'wb') as mod_file:
-                    while True:
-                        data = resp.read(1024)
-                        if not data:
-                            break
-                        size = mod_file.write(data)
-                        inner_bar.update(size)
-                        inner_bar.refresh()
-        except error.HTTPError:
-            with request.urlopen(request.Request(url, headers=headers)) as resp:
-                with open(fname, 'wb') as mod_file:
-                    while True:
-                        data = resp.read(1024)
-                        if not data:
-                            break
-                        size = mod_file.write(data)
-                        inner_bar.update(size)
-                        inner_bar.refresh()
+    for folder, media_list in {'mods': mods, 'resourcepacks': resourcepacks, 'shaderpacks': shaderpacks}.items():
+        if len(media_list) != 0 and not path.isdir(path.join(install_path, folder)):
+            mkdir(path.join(install_path, folder))
 
+    print('\033[?25l')  # Hide the cursor
+    skipped_files = 0
+
+    with tqdm(
+        total=total_size,
+        position=1,
+        unit='B',
+        unit_scale=True,
+        unit_divisor=1024,
+        bar_format='{desc}'
+    ) as outer_bar:
+        for url, fname, size in (inner_bar := tqdm(
+            [mod['_'] for mod in mods] +
+            [resourcepack['_'] for resourcepack in resourcepacks] +
+            [shaderpack['_'] for shaderpack in shaderpacks],
+            position=0,
+            unit='B',
+            unit_scale=True,
+            total=total_size,
+            unit_divisor=1024,
+            bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
+                leave=False)):
+            if not path.isfile(fname):
+                description = f"Installing {parse.unquote(path.basename(fname))}..."
+                if len(description) > get_terminal_size().columns:
+                    description = description[:get_terminal_size().columns]
+
+                outer_bar.set_description_str(description)
+                try:
+                    with request.urlopen(url) as resp:
+                        with open(fname, 'wb') as mod_file:
+                            while True:
+                                data = resp.read(1024)
+                                if not data:
+                                    break
+                                size = mod_file.write(data)
+                                inner_bar.update(size)
+                                inner_bar.refresh()
+                except error.HTTPError:
+                    with request.urlopen(request.Request(url, headers=headers)) as resp:
+                        with open(fname, 'wb') as mod_file:
+                            while True:
+                                data = resp.read(1024)
+                                if not data:
+                                    break
+                                size = mod_file.write(data)
+                                inner_bar.update(size)
+                                inner_bar.refresh()
+
+            else:
+                skipped_files += 1
+
+                description = f"{parse.unquote(path.basename(fname))} is already installed, skipping..."
+                if len(description) > get_terminal_size().columns:
+                    description = description[:get_terminal_size().columns]
+
+                outer_bar.set_description_str(description)
+
+                inner_bar.update(size)
+                inner_bar.refresh()
+
+    print('\033[2A\033[?25h')  # Go two lines back and show cursor
+
+    # Make a new bar that directly updates to 100% as
+    # the last one will dissapear after the loop is done
+    if total_size != 0:
+        with tqdm(
+            total=total_size,
+            unit='B',
+            unit_scale=True,
+            unit_divisor=1024,
+            bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}'
+        ) as bar:
+            bar.update(total_size)
     else:
-        skipped_files += 1
+        with tqdm(
+            total=1,
+            unit='it',
+            bar_format='{percentage:3.0f}%|{bar}| 0.00/0.00'
+        ) as bar:
+            bar.update(1)
 
-        description = f"{parse.unquote(path.basename(fname))} is already installed, skipping..."
-        if len(description) > get_terminal_size().columns:
-            description = description[:get_terminal_size().columns]
-
-        outer_bar.set_description_str(description)
-
-        inner_bar.update(size)
-        inner_bar.refresh()
-
-    # Return the amount of skipped files
-    return skipped_files
+    print(' ' * (get_terminal_size().columns) + '\r', end='')
+    print(
+        f"Skipped {skipped_files}/{len(mods) + len(resourcepacks) + len(shaderpacks)} files that were already installed" if skipped_files != 0 else '')
