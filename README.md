@@ -21,6 +21,13 @@ This is what the file structure of an .mcm file should be:
       "slug": "(slug)",
       "name": "(filename)"
     }
+  ],
+  "shaderpacks": [
+    {
+      "type": "(type)",
+      "slug": "(slug)",
+      "name": "(filename)"
+    }
   ]
 }
 ```
@@ -64,6 +71,14 @@ An example file:
       "slug": "1-13-1-16-unique-spawn-eggs",
       "name": "unique-spawn-eggs-v1-5.zip",
       "media": "texture"
+    }
+  ],
+  "shaderpacks": [
+    {
+      "type": "cf",
+      "slug": "complementary-shaders",
+      "name": "ComplementaryShaders_v4.7.2.zip",
+      "id": 4570482
     }
   ]
 }

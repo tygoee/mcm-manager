@@ -9,7 +9,8 @@ MediaList: TypeAlias = list[dict[str, Any]]
 Media: TypeAlias = dict[str, Any]
 
 
-def prepare_media(total_size: int, install_path: str, mods: MediaList, resourcepacks: MediaList) -> int:
+def prepare_media(total_size: int, install_path: str, mods: MediaList,
+                  resourcepacks: MediaList, shaderpacks: MediaList) -> int:
     """Get the file size and check media validity while listing all media"""
 
     def check_media_validity(media_list: MediaList, media_type: str) -> None:
@@ -58,7 +59,7 @@ def prepare_media(total_size: int, install_path: str, mods: MediaList, resourcep
     if len(resourcepacks) != 0:
         check_media_validity(resourcepacks, 'resourcepack')
 
-        # List the installed resourcepacks and prepare the resourcepack
+        # List the installed resourcepacks and prepare them
         print("\nResourcepacks:")
 
         for resourcepack in resourcepacks:
@@ -66,18 +67,37 @@ def prepare_media(total_size: int, install_path: str, mods: MediaList, resourcep
             url, resourcepack['_'] = generate_url(
                 resourcepack, install_path, 'resourcepacks')
 
-            # Append the mod size to the total size and save it in mod['_']
+            # Append the resourcepack size to the total size and save it in mod['_']
             total_size = get_headers(resourcepack, total_size)
 
-            # Print the mod name
+            # Print the resourcepack name
             print(
                 f"  {resourcepack['slug']} ({parse.unquote(resourcepack['name'])})")
+
+    if len(shaderpacks) != 0:
+        check_media_validity(shaderpacks, 'shaderpack')
+
+        # List the installed shaderpacks and prepare them
+        print("\nShaderpacks:")
+
+        for shaderpack in shaderpacks:
+            # Add the corresponding url to mod['_']
+            url, shaderpack['_'] = generate_url(
+                shaderpack, install_path, 'shaderpacks')
+
+            # Append the shaderpack size to the total size and save it in mod['_']
+            total_size = get_headers(shaderpack, total_size)
+
+            # Print the shaderpack name
+            print(
+                f"  {shaderpack['slug']} ({parse.unquote(shaderpack['name'])})")
 
     # At the end, return the total mods size
     return total_size
 
 
-def download_media(url: str, fname: str, size: int, skipped_files: int, outer_bar: tqdm, inner_bar: tqdm) -> int:  # type: ignore
+def download_media(url: str, fname: str, size: int, skipped_files: int,
+                   outer_bar: tqdm, inner_bar: tqdm) -> int:  # type: ignore
     if not path.isfile(fname):
         description = f"Installing {parse.unquote(path.basename(fname))}..."
         if len(description) > get_terminal_size().columns:

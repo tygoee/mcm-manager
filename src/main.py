@@ -8,12 +8,13 @@ MediaList: TypeAlias = list[dict[str, Any]]
 Media: TypeAlias = dict[str, Any]
 
 
-def download_files(total_size: int, install_path: str, mods: MediaList, resourcepacks: MediaList):
-    """Download all files with a tqdm loading bar"""
-    if not path.isdir(path.join(install_path, 'mods')):
-        mkdir(path.join(install_path, 'mods'))
-    if not path.isdir(path.join(install_path, 'resourcepacks')):
-        mkdir(path.join(install_path, 'resourcepacks'))
+def download_files(total_size: int, install_path: str, mods: MediaList,
+                   resourcepacks: MediaList, shaderpacks: MediaList) -> None:
+    """Download all files using a tqdm loading bar"""
+
+    for folder, media_list in {'mods': mods, 'resourcepacks': resourcepacks, 'shaderpacks': shaderpacks}.items():
+        if len(media_list) != 0 and not path.isdir(path.join(install_path, folder)):
+            mkdir(path.join(install_path, folder))
 
     print('\033[?25l')  # Hide the cursor
     skipped_files = 0
@@ -28,7 +29,8 @@ def download_files(total_size: int, install_path: str, mods: MediaList, resource
     ) as outer_bar:
         for url, fname, size in (inner_bar := tqdm(
             [mod['_'] for mod in mods] +
-            [resourcepack['_'] for resourcepack in resourcepacks],
+            [resourcepack['_'] for resourcepack in resourcepacks] +
+            [shaderpack['_'] for shaderpack in shaderpacks],
             position=0,
             unit='B',
             unit_scale=True,
@@ -62,7 +64,7 @@ def download_files(total_size: int, install_path: str, mods: MediaList, resource
 
     print(' ' * (get_terminal_size().columns) + '\r', end='')
     print(
-        f"Skipped {skipped_files}/{len(mods) + len(resourcepacks)} files that were already installed" if skipped_files != 0 else '')
+        f"Skipped {skipped_files}/{len(mods) + len(resourcepacks) + len(shaderpacks)} files that were already installed" if skipped_files != 0 else '')
 
 
 def install(manifest_file: str, install_path: str = path.dirname(path.realpath(__file__)), confirm: bool = True) -> None:
@@ -132,14 +134,14 @@ def install(manifest_file: str, install_path: str = path.dirname(path.realpath(_
           f"Mod loader: {modloader}\n"
           f"Mod loader version: {modloader_version}")
 
-    total_size = 0
-
     total_size = media.prepare_media(
-        total_size, install_path, manifest.get('mods', []), manifest.get('resourcepacks', []))
+        0, install_path, manifest.get('mods', []),
+        manifest.get('resourcepacks', []), manifest.get('shaderpacks', [])
+    )
 
     print(
-        f"\n{len(manifest.get('mods', []))} mods, {len(manifest.get('resourcepacks', []))} recourcepacks, 0 shaderpacks\n" +
-        f"Total file size: {filesize.size(total_size, system=filesize.alternative)}")  # type: ignore
+        f"\n{len(manifest.get('mods', []))} mods, {len(manifest.get('resourcepacks', []))} recourcepacks, {len(manifest.get('shaderpacks', []))} shaderpacks\n" +
+        f"Total file size: {filesize.size(total_size, system=filesize.alternative)}")
 
     # Ask for confirmation if confirm is True and install all modpacks
     if confirm == True:
@@ -150,8 +152,8 @@ def install(manifest_file: str, install_path: str = path.dirname(path.realpath(_
         print("Continue (Y/n) ")
 
     # Download all files
-    download_files(total_size, install_path, manifest.get(
-        'mods', []), manifest.get('resourcepacks', []))
+    download_files(total_size, install_path, manifest.get('mods', []),
+                   manifest.get('resourcepacks', []), manifest.get('shaderpacks', []))
 
 
 if __name__ == '__main__':

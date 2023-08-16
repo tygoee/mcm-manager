@@ -827,5 +827,13 @@
             "name": "xali%27s+Bushy+Leaves+v3.4.1.zip",
             "id": 4677561
         }
+    ],
+    "shaderpacks": [
+        {
+            "type": "cf",
+            "slug": "complementary-shaders",
+            "name": "ComplementaryShaders_v4.7.2.zip",
+            "id": 4570482
+        }
     ]
 }
