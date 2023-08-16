@@ -5,8 +5,8 @@ from urllib import parse, request, error
 from install.headers import headers
 from install.url_generator import generate_url
 
-MediaList: TypeAlias = list[dict[str, Any]]
 Media: TypeAlias = dict[str, Any]
+MediaList: TypeAlias = list[Media]
 
 
 def prepare_media(total_size: int, install_path: str, mods: MediaList,

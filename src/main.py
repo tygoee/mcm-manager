@@ -3,8 +3,8 @@ from os import path, mkdir
 from typing import Any, TypeAlias
 from install import filesize, media
 
-MediaList: TypeAlias = list[dict[str, Any]]
 Media: TypeAlias = dict[str, Any]
+MediaList: TypeAlias = list[Media]
 
 
 def install(manifest_file: str,
@@ -77,14 +77,16 @@ def install(manifest_file: str,
           f"Mod loader: {modloader}\n"
           f"Mod loader version: {modloader_version}")
 
+    mods: MediaList = manifest.get('mods', [])
+    resourcepacks: MediaList = manifest.get('resourcepacks', [])
+    shaderpacks: MediaList = manifest.get('shaderpacks', [])
+
     total_size = media.prepare_media(
-        0, install_path, manifest.get('mods', []),
-        manifest.get('resourcepacks', []), manifest.get('shaderpacks', [])
-    )
+        0, install_path, mods, resourcepacks, shaderpacks)
 
     print(
-        f"\n{len(manifest.get('mods', []))} mods, {len(manifest.get('resourcepacks', []))} " +
-        f"recourcepacks, {len(manifest.get('shaderpacks', []))} shaderpacks\n" +
+        f"\n{len(mods)} mods, {len(resourcepacks)} " +
+        f"recourcepacks, {len(shaderpacks)} shaderpacks\n" +
         f"Total file size: {filesize.size(total_size, system=filesize.alternative)}")
 
     # Ask for confirmation if confirm is True and install all modpacks
@@ -96,8 +98,8 @@ def install(manifest_file: str,
         print("Continue (Y/n) ")
 
     # Download all files
-    media.download_files(total_size, install_path, manifest.get('mods', []),
-                         manifest.get('resourcepacks', []), manifest.get('shaderpacks', []))
+    media.download_files(total_size, install_path, mods,
+                         resourcepacks, manifest.get('shaderpacks', []))
 
 
 if __name__ == '__main__':
