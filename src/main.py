@@ -7,7 +7,7 @@ MediaList: TypeAlias = list[dict[str, Any]]
 Media: TypeAlias = dict[str, Any]
 
 
-def install(manifest_file: str, install_path: str = path.dirname(path.realpath(__file__)), confirm: bool = True) -> None:
+def install(manifest_file: str, install_path: str = path.join('..', 'share', path.dirname(path.realpath(__file__))), confirm: bool = True) -> None:
     """
     Install a list of mods, resourcepacks, shaderpacks and config files. Arguments:
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         mcm_location = path.join(path.dirname(
             path.realpath(__file__)), '..', 'share', 'modpacks', 'example-manifest.json')
 
-    if (install_location := input("Install location (default: current directory): ")) == '':
+    if (install_location := input("Install location (default: share/.minecraft): ")) == '':
         install(mcm_location)
     else:
         install(mcm_location, install_location)
