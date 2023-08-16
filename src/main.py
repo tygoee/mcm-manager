@@ -1,5 +1,5 @@
 from json import load
-from os import path
+from os import path, mkdir
 from typing import Any, TypeAlias
 from install import filesize, media
 
@@ -7,7 +7,10 @@ MediaList: TypeAlias = list[dict[str, Any]]
 Media: TypeAlias = dict[str, Any]
 
 
-def install(manifest_file: str, install_path: str = path.join('..', 'share', path.dirname(path.realpath(__file__))), confirm: bool = True) -> None:
+def install(manifest_file: str,
+            install_path: str = path.join(
+                path.dirname(path.realpath(__file__)), '..', 'share', '.minecraft'),
+            confirm: bool = True) -> None:
     """
     Install a list of mods, resourcepacks, shaderpacks and config files. Arguments:
 
@@ -80,7 +83,8 @@ def install(manifest_file: str, install_path: str = path.join('..', 'share', pat
     )
 
     print(
-        f"\n{len(manifest.get('mods', []))} mods, {len(manifest.get('resourcepacks', []))} recourcepacks, {len(manifest.get('shaderpacks', []))} shaderpacks\n" +
+        f"\n{len(manifest.get('mods', []))} mods, {len(manifest.get('resourcepacks', []))} " +
+        f"recourcepacks, {len(manifest.get('shaderpacks', []))} shaderpacks\n" +
         f"Total file size: {filesize.size(total_size, system=filesize.alternative)}")
 
     # Ask for confirmation if confirm is True and install all modpacks
@@ -102,6 +106,8 @@ if __name__ == '__main__':
             path.realpath(__file__)), '..', 'share', 'modpacks', 'example-manifest.json')
 
     if (install_location := input("Install location (default: share/.minecraft): ")) == '':
+        mkdir(path.join(path.dirname(path.realpath(__file__)),
+              '..', 'share', '.minecraft'))
         install(mcm_location)
     else:
         install(mcm_location, install_location)
