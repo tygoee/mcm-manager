@@ -5,16 +5,19 @@ from urllib import parse
 Media: TypeAlias = dict[str, Any]
 
 
-def generate_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[str, str]]:
+def generate_media_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[str, str]]:
     """Generate an url to download"""
 
     match media['type']:
         case 'cf':
-            url = f"https://mediafilez.forgecdn.net/files/{int(str(media['id'])[:4])}/{int(str(media['id'])[4:])}/{media['name']}"
+            url = "https://mediafilez.forgecdn.net/files/" + \
+                f"{int(str(media['id'])[:4])}/{int(str(media['id'])[4:])}/{media['name']}"
         case 'mr':
-            url = f"https://cdn-raw.modrinth.com/data/{media['id'][:8]}/versions/{media['id'][8:]}/{media['name']}"
+            url = "https://cdn-raw.modrinth.com/data/" + \
+                f"{media['id'][:8]}/versions/{media['id'][8:]}/{media['name']}"
         case 'pm':
-            url = f"https://static.planetminecraft.com/files/resource_media/{media['media']}/{media['name']}"
+            url = "https://static.planetminecraft.com/files/resource_media/" + \
+                f"{media['media']}/{media['name']}"
         case 'url':
             url: str = media['link']
         case _:

@@ -3,7 +3,7 @@ from tqdm import tqdm
 from typing import Any, TypeAlias
 from urllib import parse, request, error
 from install.headers import headers
-from install.url_generator import generate_url
+from install.url_generator import generate_media_url
 
 Media: TypeAlias = dict[str, Any]
 MediaList: TypeAlias = list[Media]
@@ -19,10 +19,13 @@ def prepare_media(total_size: int, install_path: str, mods: MediaList,
             for key in ['type', 'slug', 'name']:
                 if key not in media:
                     raise KeyError(
-                        f"The '{key}' key should be specified in the following {media_type}: {media}.")
+                        f"The '{key}' key should be specified " +
+                        f"in the following {media_type}: {media}."
+                    )
             if media['type'] not in ['cf', 'mr', 'pm', 'url']:
                 raise KeyError(
-                    f"The type '{media['type']}' does not exist: {media}.")
+                    f"The type '{media['type']}' does not exist: {media}."
+                )
 
     def get_headers(media: Media, total_size: int) -> int:
         """Recieve the content-length headers"""
@@ -48,7 +51,7 @@ def prepare_media(total_size: int, install_path: str, mods: MediaList,
 
         for mod in mods:
             # Add the corresponding url to mod['_']
-            url, mod['_'] = generate_url(mod, install_path, 'mods')
+            url, mod['_'] = generate_media_url(mod, install_path, 'mods')
 
             # Append the mod size to the total size and save it in mod['_']
             total_size = get_headers(mod, total_size)
@@ -64,7 +67,7 @@ def prepare_media(total_size: int, install_path: str, mods: MediaList,
 
         for resourcepack in resourcepacks:
             # Add the corresponding url to mod['_']
-            url, resourcepack['_'] = generate_url(
+            url, resourcepack['_'] = generate_media_url(
                 resourcepack, install_path, 'resourcepacks')
 
             # Append the resourcepack size to the total size and save it in mod['_']
@@ -82,7 +85,7 @@ def prepare_media(total_size: int, install_path: str, mods: MediaList,
 
         for shaderpack in shaderpacks:
             # Add the corresponding url to mod['_']
-            url, shaderpack['_'] = generate_url(
+            url, shaderpack['_'] = generate_media_url(
                 shaderpack, install_path, 'shaderpacks')
 
             # Append the shaderpack size to the total size and save it in mod['_']
@@ -100,7 +103,11 @@ def download_files(total_size: int, install_path: str, mods: MediaList,
                    resourcepacks: MediaList, shaderpacks: MediaList) -> None:
     """Download all files using a tqdm loading bar"""
 
-    for folder, media_list in {'mods': mods, 'resourcepacks': resourcepacks, 'shaderpacks': shaderpacks}.items():
+    for folder, media_list in {
+        'mods': mods,
+        'resourcepacks': resourcepacks,
+        'shaderpacks': shaderpacks
+    }.items():
         if len(media_list) != 0 and not path.isdir(path.join(install_path, folder)):
             mkdir(path.join(install_path, folder))
 
@@ -125,7 +132,8 @@ def download_files(total_size: int, install_path: str, mods: MediaList,
             total=total_size,
             unit_divisor=1024,
             bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
-                leave=False)):
+            leave=False
+        )):
             if not path.isfile(fname):
                 description = f"Installing {parse.unquote(path.basename(fname))}..."
                 if len(description) > get_terminal_size().columns:
@@ -156,7 +164,8 @@ def download_files(total_size: int, install_path: str, mods: MediaList,
             else:
                 skipped_files += 1
 
-                description = f"{parse.unquote(path.basename(fname))} is already installed, skipping..."
+                description = parse.unquote(path.basename(fname)) + \
+                    "is already installed, skipping..."
                 if len(description) > get_terminal_size().columns:
                     description = description[:get_terminal_size().columns]
 
@@ -188,4 +197,6 @@ def download_files(total_size: int, install_path: str, mods: MediaList,
 
     print(' ' * (get_terminal_size().columns) + '\r', end='')
     print(
-        f"Skipped {skipped_files}/{len(mods) + len(resourcepacks) + len(shaderpacks)} files that were already installed" if skipped_files != 0 else '')
+        f"Skipped {skipped_files}/{len(mods) + len(resourcepacks) + len(shaderpacks)} " +
+        "files that were already installed" if skipped_files != 0 else ''
+    )

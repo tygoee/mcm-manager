@@ -85,10 +85,13 @@ def install(manifest_file: str,
         0, install_path, mods, resourcepacks, shaderpacks)
 
     # Give warnings for external sources
-    external_media: MediaList = [_media for _media in [mod for mod in mods] + [resourcepack for resourcepack in resourcepacks] +
-                                 [shaderpack for shaderpack in shaderpacks] if _media['type'] == 'url']
+    external_media: MediaList = [_media for _media in [mod for mod in mods] +
+                                 [resourcepack for resourcepack in resourcepacks] +
+                                 [shaderpack for shaderpack in shaderpacks]
+                                 if _media['type'] == 'url']
     if len(external_media) != 0:
-        print("\nWARNING! Some mods/resourcepacks/shaderpacks are from external sources and could harm your system:")
+        print("\nWARNING! Some mods/resourcepacks/shaderpacks are from" +
+              " external sources and could harm your system:")
         for _media in external_media:
             print(f"  {_media['slug']} ({_media['name']}): {_media['link']}")
 
@@ -112,15 +115,19 @@ def install(manifest_file: str,
 
 
 if __name__ == '__main__':
+    current_dir = path.dirname(path.realpath(__file__))
+
     if (mcm_location := input("Manifest file location (default: example-manifest.json): ")) == '':
-        mcm_location = path.join(path.dirname(
-            path.realpath(__file__)), '..', 'share', 'modpacks', 'example-manifest.json')
+        mcm_location = path.join(
+            current_dir, '..', 'share', 'modpacks', 'example-manifest.json'
+        )
 
     if (install_location := input("Install location (default: share/.minecraft): ")) == '':
-        install_location = path.join(path.dirname(
-            path.realpath(__file__)), '..', 'share', '.minecraft')
+        install_location = path.join(current_dir, '..', 'share', '.minecraft')
+
         if not path.isdir(install_location):
             mkdir(install_location)
+
         print('\n', end='')
         install(mcm_location)
     else:

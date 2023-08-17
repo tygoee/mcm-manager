@@ -1,4 +1,7 @@
-"""This is a copy from `hurry.filesize` but with type annotations"""
+"""
+This is a copy from `hurry.filesize` but with type annotations
+Credit to: https://pypi.org/project/hurry.filesize/
+"""
 
 from typing import TypeAlias
 
@@ -51,55 +54,8 @@ si: SizeSystem = [
 
 
 def size(bytes: int, system: SizeSystem) -> str:
-    """Human-readable file size.
+    """Human-readable file size."""
 
-    Using the traditional system, where a factor of 1024 is used::
-
-    >>> size(10)
-    '10B'
-    >>> size(100)
-    '100B'
-    >>> size(1000)
-    '1000B'
-    >>> size(2000)
-    '1K'
-    >>> size(10000)
-    '9K'
-    >>> size(20000)
-    '19K'
-    >>> size(100000)
-    '97K'
-    >>> size(200000)
-    '195K'
-    >>> size(1000000)
-    '976K'
-    >>> size(2000000)
-    '1M'
-
-    Using the SI system, with a factor 1000::
-
-    >>> size(10, system=si)
-    '10B'
-    >>> size(100, system=si)
-    '100B'
-    >>> size(1000, system=si)
-    '1K'
-    >>> size(2000, system=si)
-    '2K'
-    >>> size(10000, system=si)
-    '10K'
-    >>> size(20000, system=si)
-    '20K'
-    >>> size(100000, system=si)
-    '100K'
-    >>> size(200000, system=si)
-    '200K'
-    >>> size(1000000, system=si)
-    '1M'
-    >>> size(2000000, system=si)
-    '2M'
-
-    """
     suffix: str | tuple[str, str] = ''
     factor: int = 0
     for factor, suffix in system:
