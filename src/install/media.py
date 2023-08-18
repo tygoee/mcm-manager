@@ -135,7 +135,7 @@ def download_files(total_size: int, install_path: str, mods: MediaList,
             leave=False
         )):
             if not path.isfile(fname):
-                description = f"Installing {parse.unquote(path.basename(fname))}..."
+                description = f"Downloading {parse.unquote(path.basename(fname))}..."
                 if len(description) > get_terminal_size().columns:
                     description = description[:get_terminal_size().columns]
 
