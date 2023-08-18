@@ -1,7 +1,7 @@
 from json import load
 from os import path, mkdir
 from typing import Any, TypeAlias
-from install import filesize, media
+from install import filesize, media, modloaders
 
 Media: TypeAlias = dict[str, Any]
 MediaList: TypeAlias = list[Media]
@@ -10,6 +10,8 @@ MediaList: TypeAlias = list[Media]
 def install(manifest_file: str,
             install_path: str = path.join(
                 path.dirname(path.realpath(__file__)), '..', 'share', '.minecraft'),
+            launcher_path: str = modloaders.minecraft_dir,
+            install_modloader: bool = True,
             confirm: bool = True) -> None:
     """
     Install a list of mods, resourcepacks, shaderpacks and config files. Arguments:
@@ -108,6 +110,15 @@ def install(manifest_file: str,
             exit()
     else:
         print("Continue (Y/n) ")
+
+    # Download the modloader
+    if install_modloader:
+        match modloader:
+            case 'forge':
+                modloaders.forge(modpack_version, modloader_version,
+                                 'client', install_path, launcher_path)
+            case _:
+                print("Installing this modloader isn't supported yet.")
 
     # Download all files
     media.download_files(total_size, install_path, mods,
