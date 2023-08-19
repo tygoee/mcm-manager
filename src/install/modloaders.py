@@ -111,8 +111,10 @@ class forge:
 
         # Inject launcher profiles
         if side == 'client':
-            with open(path.join(launcher_dir, 'launcher_profiles.json'), 'r+') as fp:
+            with open(path.join(launcher_dir, 'launcher_profiles.json'), 'r') as fp:
                 launcher_profiles = load(fp)
+
+            with open(path.join(launcher_dir, 'launcher_profiles.json'), 'w') as fp:
                 launcher_profiles['profiles']['forge'] = {
                     "gameDir": install_dir,
                     "icon": self.install_profile['icon'],
@@ -121,7 +123,6 @@ class forge:
                     "name": "forge",
                     "type": "custom"
                 }
-                fp.seek(0)  # Move cursor to start of file
                 dump(launcher_profiles, fp, indent=2)
 
         # Install all libraries
