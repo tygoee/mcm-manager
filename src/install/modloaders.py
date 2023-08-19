@@ -10,6 +10,11 @@ from typing import Any, TypeAlias, Literal, overload
 from urllib import request
 from zipfile import ZipFile
 
+try:
+    from install import urls
+except ImportError:
+    import urls
+
 # Define the minecraft directory
 if platform == "win32":
     minecraft_dir = path.join(getenv('APPDATA', ''), ".minecraft")
@@ -47,7 +52,7 @@ class forge:
                  forge_version: str,
                  side: Literal['client', 'server'] = 'client',
                  install_dir: str = minecraft_dir,
-                 launcher_dir: str = minecraft_dir,) -> None:
+                 launcher_dir: str = minecraft_dir) -> None:
         """
         Installs a specified forge version
 
@@ -80,7 +85,8 @@ class forge:
         self.minecraft_json: dict[str, Any] = loads(request.urlopen(
             [item for item in loads(
                 request.urlopen(
-                    "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json").read().decode('utf-8')
+                    urls.forge.version_manifest_v2()
+                ).read().decode('utf-8')
             )['versions'] if item['id'] == mc_version][0]['url']
         ).read().decode('utf-8'))
 
@@ -132,6 +138,8 @@ class forge:
         self.build_processors()
 
     def replace_arg_vars(self, arg: str, data: dict[str, str]) -> str:
+        """Replace the java argument variables"""
+
         arg = arg.format(**data)
 
         if path.normpath(arg).startswith(path.sep):
@@ -175,8 +183,8 @@ class forge:
             with open(path.join(self.launcher_dir, 'versions', self.mc_version, f"{self.mc_version}.json"), 'w') as fp:
                 dump(self.minecraft_json, fp)
 
-        installer_url = "https://maven.minecraftforge.net/net/minecraftforge/forge/" + \
-            f"{self.mc_version}-{self.forge_version}/forge-{self.mc_version}-{self.forge_version}-installer.jar"
+        installer_url = urls.forge.forge_installer_url(
+            self.mc_version, self.forge_version)
 
         downloads = {self.installer: installer_url,
                      self.minecraft_jar: self.minecraft_json['downloads'][self.side]['url']}
@@ -193,19 +201,33 @@ class forge:
     def install_libraries(self) -> None:
         """Installs all libraries"""
 
-        self.libraries: forge.Libraries = {
-            library['name']: library['downloads']['artifact'] |
-            library.get('rules', [{}])[0]
-            for library in self.install_profile.get('libraries', []) +
-            self.version_json.get('libraries', []) +
-            self.minecraft_json.get('libraries', [])
-        }
-
         osdict = {
             "windows": "win32",
             "linux": "linux",
             "osx": "darwin"
         }
+
+        r_osdict = {value: key for key, value in osdict.items()}
+
+        self.libraries: forge.Libraries = {}
+
+        for library in (self.install_profile.get('libraries', []) +
+                        self.version_json.get('libraries', []) +
+                        self.minecraft_json.get('libraries', [])):
+            library: dict[str, Any]
+
+            if library.get('downloads', {}).get('artifact', {}).get('size') is not None:
+                self.libraries[library['name']] = library['downloads'].get(
+                    'artifact', {}) | library.get('rules', [{str: str | dict[str, str]}])[-1]
+
+            if library.get('natives') is not None and library['natives'].get(r_osdict[platform]) is not None:
+                native_key = library['name'] + '-' + \
+                    library['natives'][r_osdict[platform]]
+                native_value = library['downloads']['classifiers'][library['natives']
+                                                                   [r_osdict[platform]]]
+                self.libraries[native_key] = native_value
+
+        # print({key: value for key, value in self.libraries.items()})
 
         total_size = sum([library['size']
                          for library in self.libraries.values()])
@@ -225,51 +247,49 @@ class forge:
                     bar.update(library['size'])
                     bar.refresh()
                     continue
+            elif library.get('action', '') == 'disallow':
+                if platform == osdict[library['os']['name']]:
+                    bar.update(library['size'])
+                    bar.refresh()
+                    continue
 
-            library_path: str = path.normpath(library['path'])
+            library_path = path.normpath(library['path'])
+            full_library_path = path.join(
+                self.launcher_dir, 'libraries', library_path)
 
             # Make the directories to place the files in
             for index, directory in enumerate(
                 splitted_path := ['libraries', *library_path.split(path.sep)[:-1]]
             ):
-                if not path.isdir(joined_path := path.join(self.launcher_dir, *splitted_path[:index], directory)):
+                if not path.isdir(joined_path := path.join(
+                        self.launcher_dir, *splitted_path[:index], directory)):
                     mkdir(joined_path)
+
+            # If the url is '', copy from the installer
+            if library['url'] == '':
+                with ZipFile(self.installer) as archive:
+                    archive.extract(f"maven/{library['path']}", self.temp_dir)
+                if not path.isfile(full_library_path):
+                    rename(path.join(self.temp_dir, 'maven',
+                                     library_path), full_library_path)  # Move to the right dir
+                continue
 
             # Download the files if they don't already exist
             # TODO: Check the sha1
-            if path.isfile(path.join(self.launcher_dir, 'libraries', library_path)):
+            if path.isfile(full_library_path):
                 # Just update the bar and continue if they exist
                 bar.update(library['size'])
                 bar.refresh()
                 continue
 
             with request.urlopen(library['url']) as resp:
-                with open(path.join(self.launcher_dir, 'libraries', library_path), 'wb') as mod_file:
+                with open(full_library_path, 'wb') as mod_file:
                     while True:
                         resp_data = resp.read(1024)
                         if not resp_data:
                             break
                         size = mod_file.write(resp_data)
                         bar.update(size)
-
-        # # Make a new bar that directly updates to 100% as
-        # # the last one will dissapear after the loop is done
-        # if total_size != 0:
-        #     with tqdm(
-        #         total=total_size,
-        #         unit='B',
-        #         unit_scale=True,
-        #         unit_divisor=1024,
-        #         bar_format='Downloading Forge: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}'
-        #     ) as bar:
-        #         bar.update(total_size)
-        # else:
-        #     with tqdm(
-        #         total=1,
-        #         unit='it',
-        #         bar_format='Downloading Forge: {percentage:3.0f}%|{bar}| 0.00/0.00'
-        #     ) as bar:
-        #         bar.update(1)
 
     def build_processors(self) -> None:
         """Build the processors"""

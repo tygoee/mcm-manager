@@ -3,7 +3,7 @@ from tqdm import tqdm
 from typing import Any, TypeAlias
 from urllib import parse, request, error
 from install.headers import headers
-from install.urls import generate_media_url
+from install.urls import media_url
 
 Media: TypeAlias = dict[str, Any]
 MediaList: TypeAlias = list[Media]
@@ -51,7 +51,7 @@ def prepare_media(total_size: int, install_path: str, mods: MediaList,
 
         for mod in mods:
             # Add the corresponding url to mod['_']
-            url, mod['_'] = generate_media_url(mod, install_path, 'mods')
+            url, mod['_'] = media_url(mod, install_path, 'mods')
 
             # Append the mod size to the total size and save it in mod['_']
             total_size = get_headers(mod, total_size)
@@ -67,7 +67,7 @@ def prepare_media(total_size: int, install_path: str, mods: MediaList,
 
         for resourcepack in resourcepacks:
             # Add the corresponding url to mod['_']
-            url, resourcepack['_'] = generate_media_url(
+            url, resourcepack['_'] = media_url(
                 resourcepack, install_path, 'resourcepacks')
 
             # Append the resourcepack size to the total size and save it in mod['_']
@@ -85,7 +85,7 @@ def prepare_media(total_size: int, install_path: str, mods: MediaList,
 
         for shaderpack in shaderpacks:
             # Add the corresponding url to mod['_']
-            url, shaderpack['_'] = generate_media_url(
+            url, shaderpack['_'] = media_url(
                 shaderpack, install_path, 'shaderpacks')
 
             # Append the shaderpack size to the total size and save it in mod['_']
