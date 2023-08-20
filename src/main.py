@@ -138,15 +138,15 @@ if __name__ == '__main__':
 
     install_location = input("Install location (default: share/.minecraft): ")
 
-    side = input("Install side (client/server, default: client): ")
+    _side: str = input("Install side (client/server, default: client): ")
 
     if mcm_location == '':
         mcm_location = path.join(
             current_dir, '..', 'share', 'modpacks', 'example-manifest.json'
         )
 
-    if side == '':
-        side = 'client'
+    side: Literal['client',
+                  'server'] = 'server' if _side == 'server' else 'client'
 
     if install_location == '':
         install_location = path.join(current_dir, '..', 'share', '.minecraft')
@@ -155,10 +155,10 @@ if __name__ == '__main__':
             mkdir(install_location)
 
         print('\n', end='')
-        install(mcm_location, side='client')
+        install(mcm_location, side=side)
     else:
         if not path.isdir(install_location):
             mkdir(install_location)
 
         print('\n', end='')
-        install(mcm_location, install_location, side='client')
+        install(mcm_location, install_location, side=side)
