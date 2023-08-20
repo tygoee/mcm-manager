@@ -157,5 +157,8 @@ if __name__ == '__main__':
         print('\n', end='')
         install(mcm_location, side='client')
     else:
+        if not path.isdir(install_location):
+            mkdir(install_location)
+
         print('\n', end='')
         install(mcm_location, install_location, side='client')
