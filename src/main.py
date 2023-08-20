@@ -125,6 +125,16 @@ def install(manifest_file: str,
             case _:
                 print("Installing this modloader isn't supported yet.")
 
+    try:
+        _install_modloader()
+    except URLError:
+        # This is bad practice, but I don't know another way
+        # to fix the [SSL: CERTIFICATE_VERIFY_FAILED] error
+        import ssl
+
+        ssl._create_default_https_context = ssl._create_unverified_context  # type: ignore
+        _install_modloader()
+
     # Download all files
     media.download_files(total_size, install_path, mods,
                          resourcepacks, manifest.get('shaderpacks', []))
