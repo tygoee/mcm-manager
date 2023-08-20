@@ -121,12 +121,12 @@ class forge:
                 launcher_profiles = load(fp)
 
             with open(path.join(launcher_dir, 'launcher_profiles.json'), 'w') as fp:
-                launcher_profiles['profiles']['forge'] = {
+                launcher_profiles['profiles'][f'forge-{mc_version}'] = {
                     "gameDir": install_dir,
                     "icon": self.install_profile['icon'],
                     "lastUsed": "1970-01-02T00:00:00.000Z",
                     "lastVersionId": self.version_json['id'],
-                    "name": "forge",
+                    "name": f"forge {mc_version}",
                     "type": "custom"
                 }
                 dump(launcher_profiles, fp, indent=2)

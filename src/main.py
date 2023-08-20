@@ -1,6 +1,6 @@
 from json import load
 from os import path, mkdir
-from typing import Any, TypeAlias
+from typing import Any, TypeAlias, Literal
 from install import filesize, media, modloaders
 
 Media: TypeAlias = dict[str, Any]
@@ -11,6 +11,7 @@ def install(manifest_file: str,
             install_path: str = path.join(
                 path.dirname(path.realpath(__file__)), '..', 'share', '.minecraft'),
             launcher_path: str = modloaders.minecraft_dir,
+            side: Literal['client', 'server'] = 'client',
             install_modloader: bool = True,
             confirm: bool = True) -> None:
     """
@@ -115,8 +116,12 @@ def install(manifest_file: str,
     if install_modloader:
         match modloader:
             case 'forge':
-                modloaders.forge(modpack_version, modloader_version,
-                                 'client', install_path, launcher_path)
+                if side == 'client':
+                    modloaders.forge(modpack_version, modloader_version,
+                                     side, install_path, launcher_path)
+                if side == 'server':
+                    modloaders.forge(modpack_version, modloader_version,
+                                     side, install_path)
             case _:
                 print("Installing this modloader isn't supported yet.")
 
@@ -128,19 +133,29 @@ def install(manifest_file: str,
 if __name__ == '__main__':
     current_dir = path.dirname(path.realpath(__file__))
 
-    if (mcm_location := input("Manifest file location (default: example-manifest.json): ")) == '':
+    mcm_location = input(
+        "Manifest file location (default: example-manifest.json): ")
+
+    install_location = input("Install location (default: share/.minecraft): ")
+
+    side = input("Install side (client/server, default: client): ")
+
+    if mcm_location == '':
         mcm_location = path.join(
             current_dir, '..', 'share', 'modpacks', 'example-manifest.json'
         )
 
-    if (install_location := input("Install location (default: share/.minecraft): ")) == '':
+    if side == '':
+        side = 'client'
+
+    if install_location == '':
         install_location = path.join(current_dir, '..', 'share', '.minecraft')
 
         if not path.isdir(install_location):
             mkdir(install_location)
 
         print('\n', end='')
-        install(mcm_location)
+        install(mcm_location, side='client')
     else:
         print('\n', end='')
-        install(mcm_location, install_location)
+        install(mcm_location, install_location, side='client')
