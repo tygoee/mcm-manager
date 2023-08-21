@@ -2,6 +2,7 @@ from json import load
 from os import path, mkdir
 from typing import Any, TypeAlias, Literal
 from install import filesize, media, modloaders
+from urllib.error import URLError
 
 Media: TypeAlias = dict[str, Any]
 MediaList: TypeAlias = list[Media]
@@ -113,17 +114,18 @@ def install(manifest_file: str,
         print("Continue (Y/n) ")
 
     # Download the modloader
-    if install_modloader:
-        match modloader:
-            case 'forge':
-                if side == 'client':
-                    modloaders.forge(modpack_version, modloader_version,
-                                     side, install_path, launcher_path)
-                if side == 'server':
-                    modloaders.forge(modpack_version, modloader_version,
-                                     side, install_path)
-            case _:
-                print("Installing this modloader isn't supported yet.")
+    def _install_modloader():
+        if install_modloader:
+            match modloader:
+                case 'forge':
+                    if side == 'client':
+                        modloaders.forge(modpack_version, modloader_version,
+                                         side, install_path, launcher_path)
+                    if side == 'server':
+                        modloaders.forge(modpack_version, modloader_version,
+                                         side, install_path)
+                case _:
+                    print("Installing this modloader isn't supported yet.")
 
     try:
         _install_modloader()
