@@ -15,6 +15,8 @@ try:
 except ImportError:
     import urls
 
+Side: TypeAlias = Literal['client', 'server']
+
 # Define the minecraft directory
 if platform == "win32":
     minecraft_dir = path.join(getenv('APPDATA', ''), ".minecraft")
@@ -50,7 +52,7 @@ class forge:
 
     def __init__(self, mc_version: str,
                  forge_version: str,
-                 side: Literal['client', 'server'] = 'client',
+                 side: Side = 'client',
                  install_dir: str = minecraft_dir,
                  launcher_dir: str = minecraft_dir) -> None:
         """

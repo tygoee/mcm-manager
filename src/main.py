@@ -6,13 +6,14 @@ from urllib.error import URLError
 
 Media: TypeAlias = dict[str, Any]
 MediaList: TypeAlias = list[Media]
+Side: TypeAlias = Literal['client', 'server']
 
 
 def install(manifest_file: str,
             install_path: str = path.join(
                 path.dirname(path.realpath(__file__)), '..', 'share', '.minecraft'),
             launcher_path: str = modloaders.minecraft_dir,
-            side: Literal['client', 'server'] = 'client',
+            side: Side = 'client',
             install_modloader: bool = True,
             confirm: bool = True) -> None:
     """
@@ -85,8 +86,8 @@ def install(manifest_file: str,
     resourcepacks: MediaList = manifest.get('resourcepacks', [])
     shaderpacks: MediaList = manifest.get('shaderpacks', [])
 
-    total_size = media.prepare_media(
-        0, install_path, mods, resourcepacks, shaderpacks)
+    total_size = media.prepare(
+        install_path, side, mods, resourcepacks, shaderpacks)
 
     # Give warnings for external sources
     external_media: MediaList = [_media for _media in [mod for mod in mods] +
@@ -113,7 +114,7 @@ def install(manifest_file: str,
     else:
         print("Continue (Y/n) ")
 
-    # Download the modloader
+    # Download and install the modloader
     def _install_modloader():
         if install_modloader:
             match modloader:
@@ -138,7 +139,7 @@ def install(manifest_file: str,
         _install_modloader()
 
     # Download all files
-    media.download_files(total_size, install_path, mods,
+    media.download_files(total_size, install_path, side, mods,
                          resourcepacks, manifest.get('shaderpacks', []))
 
 
@@ -150,15 +151,35 @@ if __name__ == '__main__':
 
     install_location = input("Install location (default: share/.minecraft): ")
 
-    _side: str = input("Install side (client/server, default: client): ")
+    side = 'server' if input(
+        "Install side (client/server, default: client): ") == 'server' else 'client'
+
+    install_modloader = True if input(
+        "Do you want to install the modloader? (Y/n, default: n): ").lower() == 'y' else False
+
+    launcher_location = ''
+
+    if install_modloader:
+        from sys import platform
+
+        launcher_location_path = {
+            "win32": "%AppData%\\.minecraft",
+            "linux": "~/.minecraft",
+            "darwin": "~/Library/Application Support/minecraft"
+        }
+
+        launcher_location = input(
+            f"Launcher location (default: {launcher_location_path[platform]}): ")
+
+    if launcher_location == '':
+        launcher_location = modloaders.minecraft_dir
 
     if mcm_location == '':
         mcm_location = path.join(
             current_dir, '..', 'share', 'modpacks', 'example-manifest.json'
         )
 
-    side: Literal['client',
-                  'server'] = 'server' if _side == 'server' else 'client'
+    print('\n', end='')
 
     if install_location == '':
         install_location = path.join(current_dir, '..', 'share', '.minecraft')
@@ -166,11 +187,17 @@ if __name__ == '__main__':
         if not path.isdir(install_location):
             mkdir(install_location)
 
-        print('\n', end='')
-        install(mcm_location, side=side)
+        if install_modloader:
+            install(mcm_location, launcher_path=launcher_location, side=side)
+        else:
+            install(mcm_location, side=side,
+                    install_modloader=install_modloader)
     else:
         if not path.isdir(install_location):
             mkdir(install_location)
 
-        print('\n', end='')
-        install(mcm_location, install_location, side=side)
+        if install_modloader:
+            install(mcm_location, install_location, launcher_location, side)
+        else:
+            install(mcm_location, install_location, side=side,
+                    install_modloader=install_modloader)

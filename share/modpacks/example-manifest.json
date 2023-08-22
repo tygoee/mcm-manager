@@ -8,7 +8,10 @@
             "type": "cf",
             "slug": "skin-layers-3d",
             "name": "3dskinlayers-forge-1.5.4-mc1.20.1.jar",
-            "id": 4630614
+            "id": 4630614,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
@@ -26,7 +29,10 @@
             "type": "cf",
             "slug": "ambientsounds",
             "name": "AmbientSounds_FORGE_v5.2.21_mc1.20.1.jar",
-            "id": 4693169
+            "id": 4693169,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
@@ -104,13 +110,19 @@
             "type": "cf",
             "slug": "betterf3",
             "name": "BetterF3-7.0.1-Forge-1.20.1.jar",
-            "id": 4641169
+            "id": 4641169,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
             "slug": "better-third-person",
             "name": "BetterThirdPerson-Forge-1.20-1.9.0.jar",
-            "id": 4596768
+            "id": 4596768,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
@@ -158,7 +170,10 @@
             "type": "cf",
             "slug": "chat-heads",
             "name": "chat_heads-0.10.20-forge-1.20.jar",
-            "id": 4691905
+            "id": 4691905,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
@@ -307,7 +322,10 @@
             "type": "cf",
             "slug": "falling-leaves-forge",
             "name": "Fallingleaves-1.20.1-2.1.0.jar",
-            "id": 4695661
+            "id": 4695661,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
@@ -337,7 +355,10 @@
             "type": "cf",
             "slug": "gamemenumodoption",
             "name": "gamemenumodoption-mc1.20.1-2.2.1.jar",
-            "id": 4658132
+            "id": 4658132,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
@@ -385,7 +406,10 @@
             "type": "cf",
             "slug": "inventory-sorter",
             "name": "inventorysorter-1.20.1-23.0.1.jar",
-            "id": 4655091
+            "id": 4655091,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
@@ -499,7 +523,10 @@
             "type": "cf",
             "slug": "not-enough-animations",
             "name": "notenoughanimations-forge-1.6.4-mc1.20.jar",
-            "id": 4573913
+            "id": 4573913,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
@@ -511,7 +538,10 @@
             "type": "cf",
             "slug": "oculus",
             "name": "oculus-mc1.20-1.6.4.jar",
-            "id": 4578741
+            "id": 4578741,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
@@ -559,7 +589,10 @@
             "type": "cf",
             "slug": "reblured",
             "name": "Reblured-1.20.1-1.3.0.jar",
-            "id": 4695744
+            "id": 4695744,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
@@ -733,7 +766,10 @@
             "type": "cf",
             "slug": "vanilla-zoom",
             "name": "vanillazoom-1.20.1-2.1.jar",
-            "id": 4583468
+            "id": 4583468,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
@@ -751,7 +787,10 @@
             "type": "cf",
             "slug": "visuality-reforged",
             "name": "visuality-forge-2.0.2.jar",
-            "id": 4684840
+            "id": 4684840,
+            "sides": [
+                "client"
+            ]
         },
         {
             "type": "cf",
