@@ -1,6 +1,5 @@
 from os import path, makedirs
 from install import filesize, media, modloaders
-from urllib.error import URLError
 
 from _types import URLMedia, MediaList, Side, Answers
 
@@ -99,28 +98,17 @@ def install(manifest_file: str,
         print("Continue (Y/n) ")
 
     # Download and install the modloader
-    def _install_modloader():
-        if install_modloader:
-            match modloader:
-                case 'forge':
-                    if side == 'client':
-                        modloaders.forge(modpack_version, modloader_version,
-                                         side, install_path, launcher_path)
-                    if side == 'server':
-                        modloaders.forge(modpack_version, modloader_version,
-                                         side, install_path)
-                case _:
-                    print("Installing this modloader isn't supported yet.")
-
-    try:
-        _install_modloader()
-    except URLError:
-        # This is bad practice, but I don't know another way to fix
-        # the [SSL: CERTIFICATE_VERIFY_FAILED] error on some devices
-        import ssl
-
-        ssl._create_default_https_context = ssl._create_unverified_context  # type: ignore
-        _install_modloader()
+    if install_modloader:
+        match modloader:
+            case 'forge':
+                if side == 'client':
+                    modloaders.forge(modpack_version, modloader_version,
+                                     side, install_path, launcher_path)
+                if side == 'server':
+                    modloaders.forge(modpack_version, modloader_version,
+                                     side, install_path)
+            case _:
+                print("Installing this modloader isn't supported yet.")
 
     # Download all files
     media.download_files(total_size, install_path, side, mods,

@@ -84,12 +84,15 @@ class prepare:
                 size = int(request.urlopen(request.Request(
                     url, headers=headers)).headers.get('content-length', 0))
             except error.HTTPError as e:
-                print(f"! WARNING: Could not download {media['name']}:\n{e}")
+                print(f"! WARNING: Could not download {media['name']}: \n{e}")
 
                 return total_size
         except error.URLError as e:
-            print(f"! WARNING: The mod {media['name']} was not found:\n{e}")
-            return total_size
+            if e.reason.__str__() in ("[Errno -2] Name or service not known", "[Errno 11001] getaddrinfo failed"):
+                print(f"! WARNING: The mod {media['name']} was not found: {e.reason}")  # noqa
+                return total_size
+            else:
+                raise e
 
         # Add the size to the tuple
         media['_dl'] = media['_dl'][:-1] + (size,)
@@ -105,7 +108,7 @@ class prepare:
         cls.check_media_validity(media_list, media_type)
 
         # List the installed media and prepare the modpack
-        print(f"\n{media_type.capitalize()}s:")
+        print(f"\n{media_type.capitalize()}s: ")
 
         for media in (media for media in media_list if cls.side in media['sides']):
             # Add the corresponding url to media['_dl']
@@ -190,7 +193,8 @@ def download_files(total_size: int, install_path: str, side: Side, mods: MediaLi
                 continue
 
             # Prepare the description
-            description = f"Downloading {parse.unquote(path.basename(fname))}..."
+            description = f"Downloading {
+                parse.unquote(path.basename(fname))}..."
 
             # Cut off the description if it's longer than terminal width
             if len(description) > get_terminal_size().columns:
