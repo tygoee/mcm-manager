@@ -1,20 +1,16 @@
-from json import load
-from os import path, mkdir
-from typing import Any, TypeAlias, Literal
+from os import path, makedirs
 from install import filesize, media, modloaders
 from urllib.error import URLError
 
-Media: TypeAlias = dict[str, Any]
-MediaList: TypeAlias = list[Media]
-Side: TypeAlias = Literal['client', 'server']
+from _types import URLMedia, MediaList, Side, Answers
 
 
 def install(manifest_file: str,
             install_path: str = path.join(
                 path.dirname(path.realpath(__file__)), '..', 'share', '.minecraft'),
-            launcher_path: str = modloaders.minecraft_dir,
             side: Side = 'client',
             install_modloader: bool = True,
+            launcher_path: str = modloaders.MINECRAFT_DIR,
             confirm: bool = True) -> None:
     """
     Install a list of mods, resourcepacks, shaderpacks and config files. Arguments:
@@ -56,20 +52,7 @@ def install(manifest_file: str,
     """
 
     # Import the manifest file
-    with open(manifest_file) as json_file:
-        manifest: Media = load(json_file)
-
-    # Check for validity
-    if manifest.get('minecraft', None) is None:
-        raise KeyError("The modpack must include a 'minecraft' section.")
-    if manifest['minecraft'].get('version', None) is None:
-        raise KeyError(
-            "The 'minecraft' section must include the minecraft version.")
-    if manifest['minecraft'].get('modloader', None) is None or \
-            '-' not in manifest['minecraft']['modloader']:
-        raise KeyError(
-            "The 'minecraft' section must include the modloader " +
-            "and version in this format: 'modloader-x.x.x'")
+    manifest = media.prepare.load_manifest(manifest_file)
 
     # List the modpack info
     modpack_version: str = manifest['minecraft']['version']
@@ -90,15 +73,16 @@ def install(manifest_file: str,
         install_path, side, mods, resourcepacks, shaderpacks)
 
     # Give warnings for external sources
-    external_media: MediaList = [_media for _media in [mod for mod in mods] +
-                                 [resourcepack for resourcepack in resourcepacks] +
-                                 [shaderpack for shaderpack in shaderpacks]
-                                 if _media['type'] == 'url']
+    external_media: list[URLMedia] = [_media for _media in [mod for mod in mods] +
+                                      [resourcepack for resourcepack in resourcepacks] +
+                                      [shaderpack for shaderpack in shaderpacks]
+                                      if _media['type'] == 'url']
     if len(external_media) != 0:
         print("\nWARNING! Some mods/resourcepacks/shaderpacks are from" +
               " external sources and could harm your system:")
         for _media in external_media:
-            print(f"  {_media['slug']} ({_media['name']}): {_media['link']}")
+            print(
+                f"  {_media['slug']} ({_media['name']}): {_media['link']}")
 
     # Print the mod info
     print(
@@ -131,8 +115,8 @@ def install(manifest_file: str,
     try:
         _install_modloader()
     except URLError:
-        # This is bad practice, but I don't know another way
-        # to fix the [SSL: CERTIFICATE_VERIFY_FAILED] error
+        # This is bad practice, but I don't know another way to fix
+        # the [SSL: CERTIFICATE_VERIFY_FAILED] error on some devices
         import ssl
 
         ssl._create_default_https_context = ssl._create_unverified_context  # type: ignore
@@ -146,58 +130,38 @@ def install(manifest_file: str,
 if __name__ == '__main__':
     current_dir = path.dirname(path.realpath(__file__))
 
-    mcm_location = input(
-        "Manifest file location (default: example-manifest.json): ")
+    # Define all questions
+    questions = [
+        "Manifest file location (default: example-manifest.json): ",
+        "Install location (default: share/.minecraft): ",
+        "Install side (client/server, default: client): ",
+        "Do you want to install the modloader? (Y/n, default: n): ",
+        f"Launcher location (default: {modloaders.MINECRAFT_DIR}): "
+    ]
 
-    install_location = input("Install location (default: share/.minecraft): ")
+    # Ask all questions
+    answers: Answers = {
+        "manifest_file": input(questions[0]),
+        "install_path": input(questions[1]),
+        "side": 'server' if input(questions[2]) == 'server' else 'client',
+        "install_modloader": (inst_modl := True if input(questions[3]).lower() == 'y' else False),
+        "launcher_path": input(questions[4]) if inst_modl else ''
+    }
 
-    side = 'server' if input(
-        "Install side (client/server, default: client): ") == 'server' else 'client'
+    # Set the defaults
+    defaults = {
+        "launcher_path": modloaders.MINECRAFT_DIR,
+        "manifest_file": path.join(current_dir, '..', 'share', 'modpacks', 'example-manifest.json'),
+        "install_path": path.join(current_dir, '..', 'share', '.minecraft')
+    }
 
-    install_modloader = True if input(
-        "Do you want to install the modloader? (Y/n, default: n): ").lower() == 'y' else False
+    for default in defaults:
+        if answers[default] == '':
+            answers[default] = defaults[default]
 
-    launcher_location = ''
-
-    if install_modloader:
-        from sys import platform
-
-        launcher_location_path = {
-            "win32": "%AppData%\\.minecraft",
-            "linux": "~/.minecraft",
-            "darwin": "~/Library/Application Support/minecraft"
-        }
-
-        launcher_location = input(
-            f"Launcher location (default: {launcher_location_path[platform]}): ")
-
-    if launcher_location == '':
-        launcher_location = modloaders.minecraft_dir
-
-    if mcm_location == '':
-        mcm_location = path.join(
-            current_dir, '..', 'share', 'modpacks', 'example-manifest.json'
-        )
+    if not path.isdir(answers["install_path"]):
+        makedirs(answers["install_path"])
 
     print('\n', end='')
 
-    if install_location == '':
-        install_location = path.join(current_dir, '..', 'share', '.minecraft')
-
-        if not path.isdir(install_location):
-            mkdir(install_location)
-
-        if install_modloader:
-            install(mcm_location, launcher_path=launcher_location, side=side)
-        else:
-            install(mcm_location, side=side,
-                    install_modloader=install_modloader)
-    else:
-        if not path.isdir(install_location):
-            mkdir(install_location)
-
-        if install_modloader:
-            install(mcm_location, install_location, launcher_location, side)
-        else:
-            install(mcm_location, install_location, side=side,
-                    install_modloader=install_modloader)
+    install(**answers)

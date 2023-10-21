@@ -3,9 +3,7 @@ This is a copy from `hurry.filesize` but with type annotations
 Credit to: https://pypi.org/project/hurry.filesize/
 """
 
-from typing import TypeAlias
-
-SizeSystem: TypeAlias = list[tuple[int, str | tuple[str, str]]]
+from _types import SizeSystem
 
 traditional: SizeSystem = [
     (1024 ** 5, 'P'),

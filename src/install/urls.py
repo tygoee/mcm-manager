@@ -1,11 +1,10 @@
 from os import path
-from typing import Any, TypeAlias
 from urllib import parse
 
-Media: TypeAlias = dict[str, Any]
+from _types import Media
 
 
-def media_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[str, str]]:
+def media_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[str, str, int]]:
     """Generate an url to download"""
 
     match media['type']:
@@ -20,11 +19,8 @@ def media_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[
                 f"{media['media']}/{media['name']}"
         case 'url':
             url: str = media['link']
-        case _:
-            raise KeyError(
-                f"The mod type '{media['type']}' does not exist.")
 
-    return url, (url, path.join(install_path, folder, parse.unquote(media['name'])))
+    return url, (url, path.join(install_path, folder, parse.unquote(media['name'])), 0)
 
 
 class forge:
@@ -36,3 +32,9 @@ class forge:
     @staticmethod
     def version_manifest_v2() -> str:
         return "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+
+
+class fabric:
+    @staticmethod
+    def api_url(*paths: str) -> str:
+        return "https://meta.fabricmc.net/" + '/'.join(paths)

@@ -6,36 +6,32 @@ from subprocess import CalledProcessError, check_call, DEVNULL
 from sys import platform
 from time import sleep
 from tqdm import tqdm
-from typing import Any, TypeAlias, Literal, overload
+from typing import Any, Literal, overload
 from urllib import request
 from zipfile import ZipFile
 
-try:
-    from install import urls
-except ImportError:
-    import urls
-
-Side: TypeAlias = Literal['client', 'server']
+from install import urls
+from _types import Side
 
 # Define the minecraft directory
-if platform == "win32":
-    minecraft_dir = path.join(getenv('APPDATA', ''), ".minecraft")
-elif platform == "linux":
-    minecraft_dir = path.join(path.expanduser("~"), ".minecraft")
-elif platform == "darwin":
-    minecraft_dir = path.join(path.expanduser("~"),
-                              "Library", "Application Support", "minecraft")
-else:
-    raise OSError("This OS isn't supported for installing the modloader")
+_minecraft_dirs = {
+    "win32": path.join(getenv('APPDATA', ''), ".minecraft"),
+    "linux": path.join(path.expanduser("~"), ".minecraft"),
+    "darwin": path.join(path.expanduser("~"), "Library", "Application Support", "minecraft"),
+}
+
+# Defaulting to '' is intentional behavior,
+# it'll raise an error when trying to write
+MINECRAFT_DIR = _minecraft_dirs.get(platform, '')
 
 
-def delete_temp_dir(self: 'forge') -> None:
-    if path.isdir(self.temp_dir):
-        rmtree(self.temp_dir)  # type: ignore
+# def delete_temp_dir(self: 'forge') -> None:
+#     if path.isdir(self.temp_dir):
+#         rmtree(self.temp_dir)
 
 
 class forge:
-    Libraries: TypeAlias = dict[str, dict[str, Any]]
+    Libraries = dict[str, dict[str, Any]]
 
     @overload
     def __init__(self, mc_version: str,
@@ -53,8 +49,8 @@ class forge:
     def __init__(self, mc_version: str,
                  forge_version: str,
                  side: Side = 'client',
-                 install_dir: str = minecraft_dir,
-                 launcher_dir: str = minecraft_dir) -> None:
+                 install_dir: str = MINECRAFT_DIR,
+                 launcher_dir: str = MINECRAFT_DIR) -> None:
         """
         Installs a specified forge version
 
@@ -74,7 +70,7 @@ class forge:
         self.install_dir = install_dir
         self.launcher_dir = launcher_dir
 
-        self.temp_dir = path.join(launcher_dir, 'temp')
+        self.temp_dir = path.join(launcher_dir, '.temp')
         self.installer = path.join(
             self.temp_dir, f'forge-{mc_version}-{forge_version}-installer.jar')
 
@@ -149,7 +145,7 @@ class forge:
                 archive.extract(arg[1:], self.temp_dir)
             return path.join(self.temp_dir, path.normpath(arg[1:]))
 
-        if not arg.startswith('[') and not arg.endswith(']'):
+        if arg[0] not in ('[', ']'):
             return arg
 
         arg = arg.replace('[', '').replace(']', '')
@@ -174,7 +170,9 @@ class forge:
             rmtree(self.temp_dir)
             mkdir(self.temp_dir)
 
-        register(delete_temp_dir, self)  # Delete the temp dir on exit
+        # Delete the temp dir at exit
+        register(lambda: rmtree(self.temp_dir) if path.isdir(
+            self.temp_dir) else None)
 
         if self.side == 'client':
             for directory in [path.join(self.launcher_dir, 'versions'),
@@ -345,8 +343,29 @@ class forge:
             sleep(1)  # Avoid read/write conflicts
 
 
-if __name__ == '__main__':
-    install_dir = path.realpath(path.join(path.dirname(
-        path.realpath(__file__)), '..', '..', 'share', '.minecraft'))
+class fabric:
+    def __init__(self, mc_version: str,
+                 fabric_version: str,
+                 side: Side,
+                 install_dir: str = MINECRAFT_DIR,
+                 launcher_dir: str = MINECRAFT_DIR) -> None:
 
-    forge('1.20.1', '47.1.0', 'client', install_dir)
+        self.mc_version = mc_version
+
+        # Define the class variables
+        launcher_dir = install_dir if side == 'server' else launcher_dir
+
+        self.mc_version = mc_version
+        self.fabric_version = fabric_version
+        self.side = side
+        self.install_dir = install_dir
+        self.launcher_dir = launcher_dir
+
+        self.install_version()
+
+    def install_version(self):
+        print(request.urlopen(urls.fabric.api_url(
+            'v2', 'versions', 'loader',
+            self.mc_version, self.fabric_version,
+            'server', 'json'
+        )).read().decode('utf-8'))

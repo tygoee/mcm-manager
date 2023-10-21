@@ -1,23 +1,22 @@
+from json import load
 from os import path, get_terminal_size, mkdir
 from tqdm import tqdm
-from typing import Any, TypeAlias, Literal
 from urllib import parse, request, error
+
 from install.headers import headers
 from install.urls import media_url
 
-Media: TypeAlias = dict[str, Any]
-MediaList: TypeAlias = list[Media]
-Side: TypeAlias = Literal['client', 'server']
+from _types import Media, Manifest, MediaList, Side
 
 
 class prepare:
     def __new__(cls, install_path: str, side: Side, mods: MediaList,
                 resourcepacks: MediaList, shaderpacks: MediaList) -> int:
-        """Get the file size and check media validity while listing all media"""
+        "Get the file size and check media validity while listing all media"
 
         # Define the class variables
         cls.install_path = install_path
-        cls.side = side
+        cls.side: Side = side
 
         # Prepare the media
         total_size = 0
@@ -27,14 +26,34 @@ class prepare:
             'resourcepack': resourcepacks,
             'shaderpack': shaderpacks
         }.items():
-            total_size += cls.prepare_media(media_list, media_type, total_size)
+            total_size += cls.prepare_media(media_type, media_list, total_size)
 
         # At the end, return the total mods size
         return total_size
 
     @classmethod
+    def load_manifest(cls, filename: str) -> Manifest:
+        "Load a manifest file and validate it's general contents"
+        with open(filename) as json_file:
+            manifest = load(json_file)
+
+        # Check for validity
+        if manifest.get('minecraft') is None:
+            raise KeyError("The modpack must include a 'minecraft' section.")
+        if manifest['minecraft'].get('version') is None:
+            raise KeyError(
+                "The 'minecraft' section must include the minecraft version.")
+        if manifest['minecraft'].get('modloader') is None or \
+                '-' not in manifest['minecraft']['modloader']:
+            raise KeyError(
+                "The 'minecraft' section must include the modloader " +
+                "and version in this format: 'modloader-x.x.x'")
+
+        return manifest
+
+    @classmethod
     def check_media_validity(cls, media_list: MediaList, media_type: str) -> None:
-        """Check for the modpack file validity"""
+        "Check for the modpack file validity"
         for media in media_list:
             for key in ['type', 'slug', 'name']:
                 if key not in media:
@@ -48,28 +67,38 @@ class prepare:
                 )
 
             # Add a media['sides'] to all media, default ['client', 'server']
-            media['sides'] = ['client', 'server'] if media.get(
-                'sides') is None else media['sides']
+            sides: list[Side] = ['client', 'server']
+            if 'sides' not in media.keys():
+                media['sides'] = sides
 
     @classmethod
     def get_headers(cls, media: Media, url: str, total_size: int) -> int:
-        """Recieve the content-length headers"""
+        "Recieve the content-length headers"
         try:
             size = int(request.urlopen(
                 url).headers.get('content-length', 0))
         except error.HTTPError:
-            # When returning an HTTP error, try again
-            # while mimicking a common browser user agent
-            size = int(request.urlopen(request.Request(
-                url, headers=headers)).headers.get('content-length', 0))
+            try:
+                # When returning an HTTP error, try again
+                # while mimicking a common browser user agent
+                size = int(request.urlopen(request.Request(
+                    url, headers=headers)).headers.get('content-length', 0))
+            except error.HTTPError as e:
+                print(f"! WARNING: Could not download {media['name']}:\n{e}")
 
-        media['_'] += (size,)
+                return total_size
+        except error.URLError as e:
+            print(f"! WARNING: The mod {media['name']} was not found:\n{e}")
+            return total_size
+
+        # Add the size to the tuple
+        media['_dl'] = media['_dl'][:-1] + (size,)
         total_size += size
 
         return total_size
 
     @classmethod
-    def prepare_media(cls, media_list: MediaList, media_type: str, total_size: int) -> int:
+    def prepare_media(cls, media_type: str, media_list: MediaList, total_size: int) -> int:
         if len(media_list) == 0:
             return total_size
 
@@ -79,11 +108,11 @@ class prepare:
         print(f"\n{media_type.capitalize()}s:")
 
         for media in (media for media in media_list if cls.side in media['sides']):
-            # Add the corresponding url to media['_']
-            url, media['_'] = media_url(
+            # Add the corresponding url to media['_dl']
+            url, media['_dl'] = media_url(
                 media, cls.install_path, media_type + 's')
 
-            # Append the media size to the total size and save it in media['_']
+            # Append the media size to the total size and save it in media['_dl']
             total_size = cls.get_headers(media, url, total_size)
 
             # Print the media name
@@ -95,7 +124,7 @@ class prepare:
 
 def download_files(total_size: int, install_path: str, side: Side, mods: MediaList,
                    resourcepacks: MediaList, shaderpacks: MediaList) -> None:
-    """Download all files using a tqdm loading bar"""
+    "Download all files using a tqdm loading bar"
 
     for folder, media_list in {
         'mods': mods,
@@ -108,6 +137,15 @@ def download_files(total_size: int, install_path: str, side: Side, mods: MediaLi
     print('\033[?25l')  # Hide the cursor
     skipped_files = 0
 
+    # Genereate the iterator
+    iterator: list[tuple[str, str, int, list[Side]]] = []
+
+    for media in mods + resourcepacks + shaderpacks:
+        item: tuple[str, str, int, list[Side]
+                    ] = (*media['_dl'], media['sides'])
+        iterator.append(item)
+
+    # Download everything with a loading bar
     with tqdm(
         total=total_size,
         position=1,
@@ -117,10 +155,7 @@ def download_files(total_size: int, install_path: str, side: Side, mods: MediaLi
         bar_format='{desc}'
     ) as outer_bar:
         for url, fname, size, sides in (inner_bar := tqdm(
-            [mod.get('_', ('', '', 0)) + tuple([mod['sides']]) for mod in mods] +
-            [resourcepack.get('_', ('', '', 0)) + tuple([resourcepack['sides']]) for resourcepack in resourcepacks] +
-            [shaderpack.get('_', ('', '', 0)) + tuple([shaderpack['sides']])
-                for shaderpack in shaderpacks],
+            iterator,
             position=0,
             unit='B',
             unit_scale=True,
@@ -137,46 +172,80 @@ def download_files(total_size: int, install_path: str, side: Side, mods: MediaLi
             if path.isfile(fname):
                 skipped_files += 1
 
+                # Prepare the description
                 description = parse.unquote(path.basename(fname)) + \
                     "is already installed, skipping..."
+
+                # Cut off the description if it's longer than terminal width
                 if len(description) > get_terminal_size().columns:
                     description = description[:get_terminal_size().columns]
 
+                # Inform it's already installed
                 outer_bar.set_description_str(description)
 
+                # Upadate and refresh the bar
                 inner_bar.update(size)
                 inner_bar.refresh()
 
                 continue
 
+            # Prepare the description
             description = f"Downloading {parse.unquote(path.basename(fname))}..."
+
+            # Cut off the description if it's longer than terminal width
             if len(description) > get_terminal_size().columns:
                 description = description[:get_terminal_size().columns]
 
+            # Set the description string
             outer_bar.set_description_str(description)
 
             try:
+                # Download the file
                 with request.urlopen(url) as resp:
-                    with open(fname, 'wb') as mod_file:
+                    # Write the file
+                    with open(fname, 'wb') as media_file:
                         while True:
+                            # Read the response data
                             data = resp.read(1024)
+
+                            # Break if it's complete
                             if not data:
                                 break
-                            size = mod_file.write(data)
+
+                            # Update the bar
+                            size = media_file.write(data)
                             inner_bar.update(size)
                             inner_bar.refresh()
             except error.HTTPError:
                 # If the file is denied, it tries again while
                 # mimicking a common browser user agent
-                with request.urlopen(request.Request(url, headers=headers)) as resp:
-                    with open(fname, 'wb') as mod_file:
-                        while True:
-                            data = resp.read(1024)
-                            if not data:
-                                break
-                            size = mod_file.write(data)
-                            inner_bar.update(size)
-                            inner_bar.refresh()
+                try:
+                    with request.urlopen(request.Request(url, headers=headers)) as resp:
+                        with open(fname, 'wb') as media_file:
+                            while True:
+                                data = resp.read(1024)
+                                if not data:
+                                    break
+                                size = media_file.write(data)
+                                inner_bar.update(size)
+                                inner_bar.refresh()
+                except error.HTTPError:
+                    description = "WARNING: Could not download " + \
+                        parse.unquote(path.basename(fname))
+
+                    if len(description) > get_terminal_size().columns:
+                        description = description[:get_terminal_size().columns]
+
+                    outer_bar.set_description_str(description)
+            except error.URLError:
+                description = "WARNING: The mod " + \
+                    parse.unquote(path.basename(fname)) + \
+                    "was not found"
+
+                if len(description) > get_terminal_size().columns:
+                    description = description[:get_terminal_size().columns]
+
+                outer_bar.set_description_str(description)
 
     print('\033[2A\033[?25h')  # Go two lines back and show cursor
 
