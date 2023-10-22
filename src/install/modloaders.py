@@ -25,11 +25,6 @@ _minecraft_dirs = {
 MINECRAFT_DIR = _minecraft_dirs.get(platform, '')
 
 
-# def delete_temp_dir(self: 'forge') -> None:
-#     if path.isdir(self.temp_dir):
-#         rmtree(self.temp_dir)
-
-
 class forge:
     Libraries = dict[str, dict[str, Any]]
 
@@ -88,6 +83,7 @@ class forge:
             )['versions'] if item['id'] == mc_version][0]['url']
         ).read().decode('utf-8'))
 
+        # Exit if the launcher hasn't launched once
         if not path.isfile(path.join(launcher_dir, 'launcher_profiles.json')) and side == 'client':
             raise FileNotFoundError(
                 "Launch the launcher once before installing forge.")
@@ -97,14 +93,17 @@ class forge:
 
         # Load all the json data
         with ZipFile(self.installer, 'r') as archive:
+            # Read the json files in the archive
             with archive.open('install_profile.json') as fp:
                 self.install_profile: dict[str, Any] = load(fp)
             with archive.open('version.json') as fp:
                 self.version_json: dict[str, Any] = load(fp)
 
+            # Define the forge dir
             forge_dir = path.join(
                 launcher_dir, 'versions', f"{mc_version}-forge-{forge_version}")
 
+            # Write the json files to the launcher dir
             if not path.isfile(path.join(forge_dir, f"{mc_version}-forge-{forge_version}.json")) and side == 'client':
                 if not path.isdir(forge_dir):
                     mkdir(forge_dir)
@@ -138,32 +137,63 @@ class forge:
     def replace_arg_vars(self, arg: str, data: dict[str, str]) -> str:
         """Replace the java argument variables"""
 
+        # Replace the bracket-enclosed variables
+        # in the arg string with **data
         arg = arg.format(**data)
 
-        if path.normpath(arg).startswith(path.sep):
+        # Extract when paths start witn '/'
+        if path.normpath(arg).startswith('/') and arg != self.minecraft_jar:
             with ZipFile(self.installer, 'r') as archive:
                 archive.extract(arg[1:], self.temp_dir)
             return path.join(self.temp_dir, path.normpath(arg[1:]))
 
-        if arg[0] not in ('[', ']'):
+        # Return arg if it isn't "[something]"
+        if arg[0] != '[' and arg[-1] != ']':
             return arg
 
+        # Remove the brackets
         arg = arg.replace('[', '').replace(']', '')
 
+        # Split the file extension
         if '@' in arg:
             arg, file_extension = arg.split('@', 1)
         else:
             file_extension = 'jar'
 
-        folder = arg[:arg.find(':')].replace(':', '.').replace('.', path.sep) + (arg[arg.find(
-            ':'):] if arg.count(':') != 3 else arg[arg.find(':'):arg.rfind(':')]).replace(':', path.sep)
+        # Create the file and folder path
+        folder = (
+            # Until the first colon, replace
+            # ':' and '.' with path.sep
+            arg[:arg.find(':')]
+            .replace(':', '.')
+            .replace('.', path.sep) +
 
-        file = arg[arg.find(':')+1:].replace(':', '-') + '.' + file_extension
+            # Then, do the same
+            # until the third colon
+            (arg[arg.find(':'):]
+             if arg.count(':') != 3
+             else arg[arg.find(':'):
+                      arg.rfind(':')]
+             ).replace(':', path.sep)
+        )
 
+        file = (
+            # Select everything from
+            # the first colon and
+            # replace ':' with '-'
+            arg[arg.find(':')+1:]
+            .replace(':', '-') +
+
+            # Add the file extension
+            '.' + file_extension)
+
+        # Return the full path
         return path.join(self.launcher_dir, 'libraries', folder, file)
 
     def download_jar_files(self) -> None:
         """Download the jar files"""
+
+        # Create the temp dir
         if not path.isdir(self.temp_dir):
             mkdir(self.temp_dir)
         else:
@@ -175,20 +205,23 @@ class forge:
             self.temp_dir) else None)
 
         if self.side == 'client':
+            # Make the required directories
             for directory in [path.join(self.launcher_dir, 'versions'),
                               path.join(self.launcher_dir, 'versions', self.mc_version)]:
                 if not path.isdir(directory):
                     mkdir(directory)
 
+            # Write the (version).json file
             with open(path.join(self.launcher_dir, 'versions', self.mc_version, f"{self.mc_version}.json"), 'w') as fp:
                 dump(self.minecraft_json, fp)
 
-        installer_url = urls.forge.forge_installer_url(
-            self.mc_version, self.forge_version)
+        # Define the download urls
+        downloads = {
+            self.installer: urls.forge.forge_installer_url(self.mc_version, self.forge_version),
+            self.minecraft_jar: self.minecraft_json['downloads'][self.side]['url']
+        }
 
-        downloads = {self.installer: installer_url,
-                     self.minecraft_jar: self.minecraft_json['downloads'][self.side]['url']}
-
+        # Download everything
         for fname, url in downloads.items():
             with request.urlopen(url) as resp:
                 with open(path.join(fname), 'wb') as mod_file:
@@ -201,6 +234,7 @@ class forge:
     def install_libraries(self) -> None:
         """Installs all libraries"""
 
+        # Define the java os names
         osdict = {
             "windows": "win32",
             "linux": "linux",
@@ -209,29 +243,36 @@ class forge:
 
         r_osdict = {value: key for key, value in osdict.items()}
 
+        # Define the libaries
         self.libraries: forge.Libraries = {}
 
+        # Add all libraries to the libraries dict
         for library in (self.install_profile.get('libraries', []) +
                         self.version_json.get('libraries', []) +
                         self.minecraft_json.get('libraries', [])):
             library: dict[str, Any]
 
+            # Add the library to libraries
             if library.get('downloads', {}).get('artifact', {}).get('size') is not None:
-                self.libraries[library['name']] = library['downloads'].get(
-                    'artifact', {}) | library.get('rules', [{str: str | dict[str, str]}])[-1]
+                self.libraries[library['name']] = (
+                    library['downloads'].get('artifact', {}) |
+                    library.get('rules', [{str: str | dict[str, str]}])[-1]
+                )
 
+            # Add the os-specific library dependencies to libraries
             if library.get('natives') is not None and library['natives'].get(r_osdict[platform]) is not None:
-                native_key = library['name'] + '-' + \
-                    library['natives'][r_osdict[platform]]
-                native_value = library['downloads']['classifiers'][library['natives']
-                                                                   [r_osdict[platform]]]
+                native_key = library[
+                    'name'] + '-' + library['natives'][r_osdict[platform]]
+                native_value = library[
+                    'downloads']['classifiers'][library['natives'][r_osdict[platform]]]\
+
                 self.libraries[native_key] = native_value
 
-        # print({key: value for key, value in self.libraries.items()})
-
+        # Define the total size
         total_size = sum([library['size']
                          for library in self.libraries.values()])
 
+        # Download all libraries
         for library in (bar := tqdm(
             self.libraries.values(),
             unit='B',
@@ -253,6 +294,7 @@ class forge:
                     bar.refresh()
                     continue
 
+            # Define the library path
             library_path = path.normpath(library['path'])
             full_library_path = path.join(
                 self.launcher_dir, 'libraries', library_path)
@@ -274,14 +316,15 @@ class forge:
                                      library_path), full_library_path)  # Move to the right dir
                 continue
 
-            # Download the files if they don't already exist
-            # TODO: Check the sha1
+            # Check if the files don't already exist
             if path.isfile(full_library_path):
                 # Just update the bar and continue if they exist
                 bar.update(library['size'])
                 bar.refresh()
                 continue
 
+            # Download the files
+            # TODO: Check the sha1
             with request.urlopen(library['url']) as resp:
                 with open(full_library_path, 'wb') as mod_file:
                     while True:
@@ -294,32 +337,43 @@ class forge:
     def build_processors(self) -> None:
         """Build the processors"""
 
-        data: dict[str, str] = {key: value[self.side] for key, value in self.install_profile.get('data', {}).items()} | {
-            "INSTALLER": self.installer, "MINECRAFT_JAR": self.minecraft_jar,
-            "ROOT": self.launcher_dir, "SIDE": self.side}
+        # Define the data for the java args
+        data: dict[str, str] = {
+            key: value[self.side] for key, value in self.install_profile.get('data', {}).items()
+        } | {
+            "INSTALLER": self.installer,
+            "MINECRAFT_JAR": self.minecraft_jar,
+            "ROOT": self.launcher_dir,
+            "SIDE": self.side
+        }
 
+        # Execute all processors
         for processor in (bar := tqdm(
             self.install_profile.get('processors', {Any: Any}),
-            # total=total_size,
             bar_format=' Installing Forge: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
             leave=False
         )):
             processor: dict[str, Any]
 
+            # Continue if it isn't the right side
             if self.side not in processor.get('sides', ['server', 'client']):
                 continue
 
+            # Copy the libraries file to the temp dir
             copyfile(
-                path.join(
-                    self.launcher_dir, 'libraries', path.normpath(self.libraries[processor['jar']]['path'])),
-                (temp_file := path.join(
-                    self.temp_dir, path.basename(self.libraries[processor['jar']]['path'])))
+                path.join(self.launcher_dir, 'libraries', path.normpath(
+                    self.libraries[processor['jar']]['path'])),
+                (temp_file := path.join(self.temp_dir, path.basename(
+                    self.libraries[processor['jar']]['path'])))
             )
 
+            # Copy all libraries to the destination jar file
             with ZipFile(path.join(self.temp_dir, path.basename(self.libraries[processor['jar']]['path'])), 'a') as dest_archive:
                 for classpath in processor['classpath']:
                     with ZipFile(path.join(self.launcher_dir, 'libraries', path.normpath(self.libraries[classpath]['path'])), 'r') as src_archive:
                         for item in src_archive.infolist():
+                            # If it's not a class file or it's
+                            # the module info file, continue
                             if not item.filename.endswith('.class') or item.filename == 'module-info.class':
                                 continue
 
@@ -328,22 +382,27 @@ class forge:
                                 dest_archive.writestr(
                                     item.filename, src_archive.read(item.filename))
 
+            # Get all java args
             args: list[str] = [
                 self.replace_arg_vars(arg, data) for arg in processor['args']
             ]
 
+            # Execute the command
             try:
                 check_call(['java', '-jar', temp_file, *args],
                            stdout=DEVNULL)
             except CalledProcessError as e:
                 print(e)
-                exit()
+                exit(1)
 
+            # Refresh the loading bar
             bar.refresh()
             sleep(1)  # Avoid read/write conflicts
 
 
 class fabric:
+    "I accidentally uploaded this, it's unfinished"
+
     def __init__(self, mc_version: str,
                  fabric_version: str,
                  side: Side,
