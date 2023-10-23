@@ -1,5 +1,40 @@
 # Minecraft Modpack Manager
 
+Minecraft modpack manager - installs huge amounts of modpacks in one click! Currently, you need to manually make the files and a GUI app is not yet made, as this app is still in it's alpha phase. You can currently download mods from curseforge, modrinth and planet minecraft, install from forge automatically and download from custom urls. Mods, resourcepacks and shaderpacks are currently supported.
+
+## Creating a mcm file
+
+The mod types are `cf`, `mr`, `pm` and `url`
+
+You can get a mod slug/id from the mod url:
+
+- https://www.curseforge.com/minecraft/mc-mods/worldedit/download/4586218  
+  ├ `slug` = worldedit  
+  └ `id` = 4586218
+
+- https://modrinth.com/mod/sodium/version/mc1.20.1-0.5.1  
+  └ `slug` = sodium
+- https://www.planetminecraft.com/texture-pack/1-13-1-16-unique-spawn-eggs/  
+  └ `slug` = 1-13-1-16-unique-spawn-eggs
+
+To get the rest of the information, go to downloads → the file, right click and copy the download link:
+
+- https://mediafilez.forgecdn.net/files/4586/218/worldedit-mod-7.2.15.jar  
+  └ `slug` = worldedit-mod-7.2.15.jar
+- https://cdn-raw.modrinth.com/data/AANobbMI/versions/OkwCNtFH/sodium-fabric-mc1.20.1-0.5.1.jar  
+  ├ `id` = AANobbMIOkwCNtFH,  
+  └ `slug` = sodium-fabric-mc1.20.1-0.5.1.jar
+
+- https://static.planetminecraft.com/files/resource_media/texture/unique-spawn-eggs-v1-5.zip  
+  ├ `media` texture  
+  └ `name` unique-spawn-eggs-v1-5.zip
+
+Make sure 'name' is ascii encoded, for example `%20` instead of a space
+
+## File structure
+
+Currently you unfortunately need to make the file manually, but for that reason I'll probably make a GUI in the future.
+
 This is what the file structure of an .mcm file should be:
 
 ```jsonc
@@ -83,19 +118,3 @@ An example file:
   ]
 }
 ```
-
-The mod types are `cf`, `mr`, `pm` and `url`
-
-You can get a mod slug &/ id from the mod url:
-
-- https://www.curseforge.com/minecraft/mc-mods/worldedit/download/4586218 -> worldedit, 4586218
-- https://modrinth.com/mod/sodium/version/mc1.20.1-0.5.1 -> sodium
-- https://www.planetminecraft.com/texture-pack/1-13-1-16-unique-spawn-eggs/ -> 1-13-1-16-unique-spawn-eggs
-
-To get the mod name &/ mod id &/ media type, go to downloads -> the file and copy download link:
-
-- https://mediafilez.forgecdn.net/files/4586/218/worldedit-mod-7.2.15.jar -> worldedit-mod-7.2.15.jar
-- https://cdn-raw.modrinth.com/data/AANobbMI/versions/OkwCNtFH/sodium-fabric-mc1.20.1-0.5.1.jar -> AANobbMIOkwCNtFH, sodium-fabric-mc1.20.1-0.5.1.jar
-- https://static.planetminecraft.com/files/resource_media/texture/unique-spawn-eggs-v1-5.zip -> texture, unique-spawn-eggs-v1-5.zip
-
-Make sure 'name' is ascii encoded, for example `%20` instead of a space
