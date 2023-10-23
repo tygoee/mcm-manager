@@ -4,14 +4,17 @@ from os import path, getenv, mkdir, rename
 from shutil import rmtree, copyfile
 from subprocess import CalledProcessError, check_call, DEVNULL
 from sys import platform
-from time import sleep
 from tqdm import tqdm
-from typing import Any, Literal, overload
+from typing import overload
 from urllib import request
 from zipfile import ZipFile
 
 from install import urls
-from _types import Side
+from _types import (
+    Client, Server, Side,
+    MinecraftJson, VersionJson,
+    InstallProfile, Libraries
+)
 
 # Define the minecraft directory
 _minecraft_dirs = {
@@ -26,20 +29,18 @@ MINECRAFT_DIR = _minecraft_dirs.get(platform, '')
 
 
 class forge:
-    Libraries = dict[str, dict[str, Any]]
-
     @overload
     def __init__(self, mc_version: str,
                  forge_version: str,
-                 side: Literal['server'],
-                 install_dir: str = ...) -> None: ...
-
-    @overload
-    def __init__(self, mc_version: str,
-                 forge_version: str,
-                 side: Literal['client'],
+                 side: Client,
                  install_dir: str = ...,
                  launcher_dir: str = ...) -> None: ...
+
+    @overload
+    def __init__(self, mc_version: str,
+                 forge_version: str,
+                 side: Server,
+                 install_dir: str = ...) -> None: ...
 
     def __init__(self, mc_version: str,
                  forge_version: str,
@@ -61,7 +62,7 @@ class forge:
 
         self.mc_version = mc_version
         self.forge_version = forge_version
-        self.side = side
+        self.side: Side = side
         self.install_dir = install_dir
         self.launcher_dir = launcher_dir
 
@@ -75,7 +76,7 @@ class forge:
         else:
             self.minecraft_jar = path.join(self.temp_dir, f"{mc_version}.jar")
 
-        self.minecraft_json: dict[str, Any] = loads(request.urlopen(
+        self.minecraft_json: MinecraftJson = loads(request.urlopen(
             [item for item in loads(
                 request.urlopen(
                     urls.forge.version_manifest_v2()
@@ -95,9 +96,9 @@ class forge:
         with ZipFile(self.installer, 'r') as archive:
             # Read the json files in the archive
             with archive.open('install_profile.json') as fp:
-                self.install_profile: dict[str, Any] = load(fp)
+                self.install_profile: InstallProfile = load(fp)
             with archive.open('version.json') as fp:
-                self.version_json: dict[str, Any] = load(fp)
+                self.version_json: VersionJson = load(fp)
 
             # Define the forge dir
             forge_dir = path.join(
@@ -241,32 +242,19 @@ class forge:
             "osx": "darwin"
         }
 
-        r_osdict = {value: key for key, value in osdict.items()}
-
         # Define the libaries
-        self.libraries: forge.Libraries = {}
+        self.libraries: Libraries = {}
 
         # Add all libraries to the libraries dict
         for library in (self.install_profile.get('libraries', []) +
                         self.version_json.get('libraries', []) +
                         self.minecraft_json.get('libraries', [])):
-            library: dict[str, Any]
 
             # Add the library to libraries
-            if library.get('downloads', {}).get('artifact', {}).get('size') is not None:
-                self.libraries[library['name']] = (
-                    library['downloads'].get('artifact', {}) |
-                    library.get('rules', [{str: str | dict[str, str]}])[-1]
-                )
+            rules = library.get('rules', [])
 
-            # Add the os-specific library dependencies to libraries
-            if library.get('natives') is not None and library['natives'].get(r_osdict[platform]) is not None:
-                native_key = library[
-                    'name'] + '-' + library['natives'][r_osdict[platform]]
-                native_value = library[
-                    'downloads']['classifiers'][library['natives'][r_osdict[platform]]]\
-
-                self.libraries[native_key] = native_value
+            self.libraries[library['name']] = library['downloads']['artifact']
+            self.libraries[library['name']].update(rules[-1] if rules else {})
 
         # Define the total size
         total_size = sum([library['size']
@@ -283,12 +271,12 @@ class forge:
             leave=False
         )):
             # Don't download if it's not for the current os
-            if library.get('action', '') == 'allow':
+            if 'action' in library and library['action'] == 'allow':
                 if platform != osdict[library['os']['name']]:
                     bar.update(library['size'])
                     bar.refresh()
                     continue
-            elif library.get('action', '') == 'disallow':
+            if 'action' in library and library['action'] == 'disallow':
                 if platform == osdict[library['os']['name']]:
                     bar.update(library['size'])
                     bar.refresh()
@@ -349,12 +337,10 @@ class forge:
 
         # Execute all processors
         for processor in (bar := tqdm(
-            self.install_profile.get('processors', {Any: Any}),
+            self.install_profile.get('processors', {}),
             bar_format=' Installing Forge: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
             leave=False
         )):
-            processor: dict[str, Any]
-
             # Continue if it isn't the right side
             if self.side not in processor.get('sides', ['server', 'client']):
                 continue
@@ -389,15 +375,13 @@ class forge:
 
             # Execute the command
             try:
-                check_call(['java', '-jar', temp_file, *args],
-                           stdout=DEVNULL)
+                check_call(['java', '-jar', temp_file, *args], stdout=DEVNULL)
             except CalledProcessError as e:
                 print(e)
                 exit(1)
 
             # Refresh the loading bar
             bar.refresh()
-            sleep(1)  # Avoid read/write conflicts
 
 
 class fabric:
