@@ -20,10 +20,10 @@ You can get a mod slug/id from the mod url:
 To get the rest of the information, go to downloads → the file, right click and copy the download link:
 
 - https://mediafilez.forgecdn.net/files/4586/218/worldedit-mod-7.2.15.jar  
-  └ `slug` = worldedit-mod-7.2.15.jar
+  └ `name` = worldedit-mod-7.2.15.jar
 - https://cdn-raw.modrinth.com/data/AANobbMI/versions/OkwCNtFH/sodium-fabric-mc1.20.1-0.5.1.jar  
   ├ `id` = AANobbMIOkwCNtFH,  
-  └ `slug` = sodium-fabric-mc1.20.1-0.5.1.jar
+  └ `name` = sodium-fabric-mc1.20.1-0.5.1.jar
 
 - https://static.planetminecraft.com/files/resource_media/texture/unique-spawn-eggs-v1-5.zip  
   ├ `media` texture  
