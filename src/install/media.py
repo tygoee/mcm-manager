@@ -26,7 +26,7 @@ class prepare:
             'resourcepack': resourcepacks,
             'shaderpack': shaderpacks
         }.items():
-            total_size += cls.prepare_media(media_type, media_list, total_size)
+            total_size += cls.prepare_media(media_type, media_list)
 
         # At the end, return the total mods size
         return total_size
@@ -72,7 +72,7 @@ class prepare:
                 media['sides'] = sides
 
     @classmethod
-    def get_headers(cls, media: Media, url: str, total_size: int) -> int:
+    def get_headers(cls, media: Media, url: str) -> int:
         "Recieve the content-length headers"
         try:
             size = int(request.urlopen(
@@ -86,43 +86,45 @@ class prepare:
             except error.HTTPError as e:
                 print(f"! WARNING: Could not download {media['name']}: \n{e}")
 
-                return total_size
+                return 0
         except error.URLError as e:
             if e.reason.__str__() in ("[Errno -2] Name or service not known", "[Errno 11001] getaddrinfo failed"):
                 print(f"! WARNING: The mod {media['name']} was not found: {e.reason}")  # noqa
-                return total_size
+                return 0
             else:
                 raise e
 
         # Add the size to the tuple
-        media['_dl'] = media['_dl'][:-1] + (size,)
-        total_size += size
+        if '_dl' in media:
+            media['_dl'] = media['_dl'][:-1] + (size,)
 
-        return total_size
+        return size
 
     @classmethod
-    def prepare_media(cls, media_type: str, media_list: MediaList, total_size: int) -> int:
+    def prepare_media(cls, media_type: str, media_list: MediaList) -> int:
         if len(media_list) == 0:
-            return total_size
+            return 0
 
         cls.check_media_validity(media_list, media_type)
 
         # List the installed media and prepare the modpack
         print(f"\n{media_type.capitalize()}s: ")
 
+        size = 0
         for media in (media for media in media_list if cls.side in media['sides']):
             # Add the corresponding url to media['_dl']
-            url, media['_dl'] = media_url(
+            url, dl = media_url(
                 media, cls.install_path, media_type + 's')
+            media['_dl'] = (*dl, 0)
 
             # Append the media size to the total size and save it in media['_dl']
-            total_size = cls.get_headers(media, url, total_size)
+            size += cls.get_headers(media, url)
 
             # Print the media name
             print(f"  {media['slug']} ({parse.unquote(media['name'])})")
 
         # At the end, return the total media size
-        return total_size
+        return size
 
 
 def download_files(total_size: int, install_path: str, side: Side, mods: MediaList,
@@ -144,8 +146,10 @@ def download_files(total_size: int, install_path: str, side: Side, mods: MediaLi
     iterator: list[tuple[str, str, int, list[Side]]] = []
 
     for media in mods + resourcepacks + shaderpacks:
-        item: tuple[str, str, int, list[Side]
-                    ] = (*media['_dl'], media['sides'])
+        if "_dl" not in media:
+            continue
+        item: tuple[str, str, int, list[Side]] = (
+            *media['_dl'], media['sides'])
         iterator.append(item)
 
     # Download everything with a loading bar

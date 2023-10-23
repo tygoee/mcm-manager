@@ -4,13 +4,14 @@ from urllib import parse
 from _types import Media
 
 
-def media_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[str, str, int]]:
+def media_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[str, str]]:
     """Generate an url to download"""
 
     match media['type']:
         case 'cf':
             url = "https://mediafilez.forgecdn.net/files/" + \
-                f"{int(str(media['id'])[:4])}/{int(str(media['id'])[4:])}/{media['name']}"
+                f"{int(str(media['id'])[:4])}/" +  \
+                f"{int(str(media['id'])[4:])}/{media['name']}"
         case 'mr':
             url = "https://cdn-raw.modrinth.com/data/" + \
                 f"{media['id'][:8]}/versions/{media['id'][8:]}/{media['name']}"
@@ -20,7 +21,7 @@ def media_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[
         case 'url':
             url: str = media['url']
 
-    return url, (url, path.join(install_path, folder, parse.unquote(media['name'])), 0)
+    return url, (url, path.join(install_path, folder, parse.unquote(media['name'])))
 
 
 class forge:
