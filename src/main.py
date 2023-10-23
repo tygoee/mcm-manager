@@ -81,7 +81,7 @@ def install(manifest_file: str,
               " external sources and could harm your system:")
         for _media in external_media:
             print(
-                f"  {_media['slug']} ({_media['name']}): {_media['link']}")
+                f"  {_media['slug']} ({_media['name']}): {_media['url']}")
 
     # Print the mod info
     print(

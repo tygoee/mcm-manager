@@ -18,7 +18,7 @@ def media_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[
             url = "https://static.planetminecraft.com/files/resource_media/" + \
                 f"{media['media']}/{media['name']}"
         case 'url':
-            url: str = media['link']
+            url: str = media['url']
 
     return url, (url, path.join(install_path, folder, parse.unquote(media['name'])), 0)
 

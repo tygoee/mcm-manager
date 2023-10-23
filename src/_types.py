@@ -43,7 +43,7 @@ class MRMedia(__Media):
 class URLMedia(__Media):
     "Media for CurseForge"
     type: Literal['url']
-    link: str
+    url: str
 
 
 # Dictionary with info about a mod, resourcepack or shaderpack
