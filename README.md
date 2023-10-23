@@ -1,6 +1,6 @@
 # Minecraft Modpack Manager
 
-Minecraft modpack manager - installs huge amounts of modpacks in one click! Currently, you need to manually make the files and a GUI app is not yet made, as this app is still in it's alpha phase. You can currently download mods from curseforge, modrinth and planet minecraft, install from forge automatically and download from custom urls. Mods, resourcepacks and shaderpacks are currently supported.
+Minecraft modpack manager - This solves the problem of having to install mods manually. Currently, you need to edit the file manually, as this is still in it's alpha phase. You can currently download mods from curseforge, modrinth and planet minecraft and custom urls. You can also install forge automatically. Currently, mods, resourcepacks and shaderpacks are supported.
 
 ## Creating a mcm file
 
