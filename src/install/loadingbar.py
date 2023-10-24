@@ -38,13 +38,23 @@ class loadingbar(Generic[T]):
         """
 
         # Define class variables
-        if iterator is not None:
+        self._iter_type: Literal['iter', 'total', 'both']
+
+        if iterator is not None and total == 0:
+            self._iter_type = 'iter'
             self.iterator = iterator
             self.iterable = iter(iterator)
-            self.total = len(iterator)
-        else:
+            self.iterator_len = len(iterator)
+        elif iterator is None and total != 0:
+            self._iter_type = 'total'
             self.iterator = None
             self.iterable = None
+            self.total = total
+        elif iterator is not None and total != 0:
+            self._iter_type = 'both'
+            self.iterator = iterator
+            self.iterable = iter(iterator)
+            self.iterator_len = len(iterator)
             self.total = total
 
         self.idx = 0
@@ -91,7 +101,7 @@ class loadingbar(Generic[T]):
         if self.iterable is not None:
             self.item = next(self.iterable)
             self.idx += 1
-        elif self.idx < self.total:
+        elif self.idx < self.total:  # 'total'
             self.idx += 1
         else:
             raise StopIteration
@@ -100,7 +110,7 @@ class loadingbar(Generic[T]):
         self.refresh()
 
         # Return the item
-        if self.iterator is not None:
+        if self.iterator is not None:  # 'both' or 'iter'
             return self.item
         else:
             return self.idx  # type: ignore
@@ -121,17 +131,23 @@ class loadingbar(Generic[T]):
         "Refresh the loading bar, called automatically"
 
         # Calculate progress
-        percent = round(self.idx / self.total * 100, 0)
+        if self._iter_type in ('both', 'total'):
+            percent = round(self.idx / self.total * 100, 0)
+        else:
+            percent = round(self.idx / self.iterator_len * 100, 0)
+
         if percent >= 100:
             percent = 100
 
         # Define the current and total
         if self.unit == 'it':
             current = str(self.idx)
-            total = str(self.total)
+            total = str(self.total if self._iter_type in (
+                'both', 'total') else self.iterator_len)
         else:
             current = size(self.idx, traditional)
-            total = size(self.total, traditional)
+            total = size(self.total if self._iter_type in (
+                'both', 'total') else self.iterator_len, traditional)
 
         # Define the text length
         text_length = self.formatting_length + \
@@ -158,17 +174,18 @@ class loadingbar(Generic[T]):
         ), end=end)
 
         # Clear the loading bar at the end
-        if self.idx == self.total:
+        if self.idx == (self.total if self._iter_type in (
+                'both', 'total') else self.iterator_len):
             if self.disappear and self.show_desc:
                 print('\r\033[K\033[F\r\033[K', end='')
             elif self.disappear:
-                print("\r\033[K", end='')
+                print('\r\033[K', end='')
             elif not self.show_desc:
-                print("\n")
+                print(end='\n')
 
     def update(self, amount: int) -> None:
         "Add 'n' amount of iterations to the loading bar"
-        if self.iterator is not None:
+        if self._iter_type == 'iter':
             i = 0
 
             # Call next(self) while less than amount

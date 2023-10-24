@@ -267,15 +267,16 @@ class forge:
             self.libraries[library['name']].update(rules[-1] if rules else {})
 
         # Define the total size
-        # total_size = sum([library['size']
-        #                  for library in self.libraries.values()])
+        total_size = sum([library['size']
+                         for library in self.libraries.values()])
 
         # Download all libraries
         for library in (bar := loadingbar(
             self.libraries.values(),
             unit='B',
-            # total=total_size,
-            bar_format='Downloading Forge: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
+            title="Downloading Forge:",
+            disappear=True,
+            total=total_size,
         )):
             # Don't download if it's not for the current os
             if 'action' in library and library['action'] == 'allow':
@@ -345,7 +346,8 @@ class forge:
         # Execute all processors
         for processor in (bar := loadingbar(
             self.install_profile.get('processors', {}),
-            bar_format=' Installing Forge: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}'
+            title="Installing Forge:",
+            disappear=True
         )):
             # Continue if it isn't the right side
             if self.side not in processor.get('sides', ['server', 'client']):
