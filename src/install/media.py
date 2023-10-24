@@ -1,10 +1,10 @@
 from json import load
 from os import path, get_terminal_size, mkdir
-from tqdm import tqdm
 from urllib import parse, request, error
 
 from install.headers import headers
 from install.urls import media_url
+from install.loadingbar import loadingbar
 
 from _types import Media, Manifest, MediaList, Side
 
@@ -153,24 +153,14 @@ def download_files(total_size: int, install_path: str, side: Side, mods: MediaLi
         iterator.append(item)
 
     # Download everything with a loading bar
-    with tqdm(
+    with loadingbar(
         total=total_size,
-        position=1,
         unit='B',
-        unit_scale=True,
-        unit_divisor=1024,
-        bar_format='{desc}'
-    ) as outer_bar:
-        for url, fname, size, sides in (inner_bar := tqdm(
-            iterator,
-            position=0,
-            unit='B',
-            unit_scale=True,
-            total=total_size,
-            unit_divisor=1024,
-            bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
-            leave=False
-        )):
+        show_desc=True,
+        disappear=True
+    ) as bar:
+        bar: loadingbar[int]  # The only way it worked out
+        for url, fname, size, sides in iterator:
             if side not in sides:
                 # As the size isn't calculated, it
                 # doesn't have to update the bar
@@ -179,33 +169,16 @@ def download_files(total_size: int, install_path: str, side: Side, mods: MediaLi
             if path.isfile(fname):
                 skipped_files += 1
 
-                # Prepare the description
-                description = parse.unquote(path.basename(fname)) + \
-                    "is already installed, skipping..."
-
-                # Cut off the description if it's longer than terminal width
-                if len(description) > get_terminal_size().columns:
-                    description = description[:get_terminal_size().columns]
-
                 # Inform it's already installed
-                outer_bar.set_description_str(description)
-
-                # Upadate and refresh the bar
-                inner_bar.update(size)
-                inner_bar.refresh()
+                bar.update(size)
+                bar.set_desc(parse.unquote(path.basename(fname)) +
+                             " is already installed, skipping...")
 
                 continue
 
-            # Prepare the description
-            description = f"Downloading {
-                parse.unquote(path.basename(fname))}..."
-
-            # Cut off the description if it's longer than terminal width
-            if len(description) > get_terminal_size().columns:
-                description = description[:get_terminal_size().columns]
-
-            # Set the description string
-            outer_bar.set_description_str(description)
+            # Set the description
+            bar.set_desc(f"Downloading {parse.unquote(
+                path.basename(fname))}...")
 
             try:
                 # Download the file
@@ -221,9 +194,8 @@ def download_files(total_size: int, install_path: str, side: Side, mods: MediaLi
                                 break
 
                             # Update the bar
-                            size = media_file.write(data)
-                            inner_bar.update(size)
-                            inner_bar.refresh()
+                            part_size = media_file.write(data)
+                            bar.update(part_size)
             except error.HTTPError:
                 # If the file is denied, it tries again while
                 # mimicking a common browser user agent
@@ -234,48 +206,14 @@ def download_files(total_size: int, install_path: str, side: Side, mods: MediaLi
                                 data = resp.read(1024)
                                 if not data:
                                     break
-                                size = media_file.write(data)
-                                inner_bar.update(size)
-                                inner_bar.refresh()
+                                part_size = media_file.write(data)
+                                bar.update(part_size)
                 except error.HTTPError:
-                    description = "WARNING: Could not download " + \
-                        parse.unquote(path.basename(fname))
-
-                    if len(description) > get_terminal_size().columns:
-                        description = description[:get_terminal_size().columns]
-
-                    outer_bar.set_description_str(description)
+                    pass  # The user has already been warned
             except error.URLError:
-                description = "WARNING: The mod " + \
-                    parse.unquote(path.basename(fname)) + \
-                    "was not found"
+                pass  # The user has already been warned
 
-                if len(description) > get_terminal_size().columns:
-                    description = description[:get_terminal_size().columns]
-
-                outer_bar.set_description_str(description)
-
-    print('\033[2A\033[?25h')  # Go two lines back and show cursor
-
-    # Make a new bar that directly updates to 100% as
-    # the last one will dissapear after the loop is done
-    # (Dissapears automatically if also installing mods)
-    if total_size != 0:
-        with tqdm(
-            total=total_size,
-            unit='B',
-            unit_scale=True,
-            unit_divisor=1024,
-            bar_format='{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}'
-        ) as bar:
-            bar.update(total_size)
-    else:
-        with tqdm(
-            total=1,
-            unit='it',
-            bar_format='{percentage:3.0f}%|{bar}| 0.00/0.00'
-        ) as bar:
-            bar.update(1)
+    print('\033[?25h')  # Show the cursor
 
     total_files = len([media for media in mods +
                       resourcepacks + shaderpacks if side in media['sides']])

@@ -4,12 +4,12 @@ from os import path, getenv, mkdir, rename
 from shutil import rmtree, copyfile
 from subprocess import CalledProcessError, check_call, DEVNULL
 from sys import platform
-from tqdm import tqdm
 from typing import overload
 from urllib import request
 from zipfile import ZipFile
 
 from install.urls import forge as forge_urls, fabric as fabric_urls
+from install.loadingbar import loadingbar
 
 from _types import (
     Client, Server, Side,
@@ -267,18 +267,15 @@ class forge:
             self.libraries[library['name']].update(rules[-1] if rules else {})
 
         # Define the total size
-        total_size = sum([library['size']
-                         for library in self.libraries.values()])
+        # total_size = sum([library['size']
+        #                  for library in self.libraries.values()])
 
         # Download all libraries
-        for library in (bar := tqdm(
+        for library in (bar := loadingbar(
             self.libraries.values(),
             unit='B',
-            unit_scale=True,
-            total=total_size,
-            unit_divisor=1024,
+            # total=total_size,
             bar_format='Downloading Forge: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
-            leave=False
         )):
             # Don't download if it's not for the current os
             if 'action' in library and library['action'] == 'allow':
@@ -346,10 +343,9 @@ class forge:
         }
 
         # Execute all processors
-        for processor in (bar := tqdm(
+        for processor in (bar := loadingbar(
             self.install_profile.get('processors', {}),
-            bar_format=' Installing Forge: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}',
-            leave=False
+            bar_format=' Installing Forge: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}'
         )):
             # Continue if it isn't the right side
             if self.side not in processor.get('sides', ['server', 'client']):
