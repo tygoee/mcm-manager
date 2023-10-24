@@ -9,7 +9,8 @@ from typing import overload
 from urllib import request
 from zipfile import ZipFile
 
-from install import urls
+from install.urls import forge as forge_urls, fabric as fabric_urls
+
 from _types import (
     Client, Server, Side,
     MinecraftJson, VersionJson,
@@ -88,7 +89,7 @@ class forge:
         self.minecraft_json: MinecraftJson = loads(request.urlopen(
             [item for item in loads(
                 request.urlopen(
-                    urls.forge.version_manifest_v2()
+                    forge_urls.version_manifest_v2()
                 ).read().decode('utf-8')
             )['versions'] if item['id'] == mc_version][0]['url']
         ).read().decode('utf-8'))
@@ -227,7 +228,7 @@ class forge:
 
         # Define the download urls
         downloads = {
-            self.installer: urls.forge.forge_installer_url(self.mc_version, self.forge_version),
+            self.installer: forge_urls.forge_installer_url(self.mc_version, self.forge_version),
             self.minecraft_jar: self.minecraft_json['downloads'][self.side]['url']
         }
 
@@ -416,7 +417,7 @@ class fabric:
         self.install_version()
 
     def install_version(self):
-        print(request.urlopen(urls.fabric.api_url(
+        print(request.urlopen(fabric_urls.api_url(
             'v2', 'versions', 'loader',
             self.mc_version, self.fabric_version,
             'server', 'json'
