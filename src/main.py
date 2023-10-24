@@ -3,10 +3,11 @@ from install import filesize, media, modloaders
 
 from _types import URLMedia, MediaList, Side, Answers
 
+app_root = path.join(path.dirname(path.realpath(__file__)), '..')
+
 
 def install(manifest_file: str,
-            install_path: str = path.join(
-                path.dirname(path.realpath(__file__)), '..', 'share', '.minecraft'),
+            install_path: str = path.join(app_root, 'share', '.minecraft'),
             side: Side = 'client',
             install_modloader: bool = True,
             launcher_path: str = modloaders.MINECRAFT_DIR,
@@ -14,39 +15,12 @@ def install(manifest_file: str,
     """
     Install a list of mods, resourcepacks, shaderpacks and config files. Arguments:
 
-    :param manifest_file: This should be a path to a manifest file. The file structure:
-
-    ```json
-    {
-        "minecraft": {
-            "version": "(version)",
-            "modloader": "(modloader)-(modloader version)"
-        },
-        "mods": [
-            {
-                "type": "(type)",
-                "slug": "(slug)",
-                "name": "(filename)"
-            }
-        ],
-        "resourcepacks": [
-            {
-                "type": "(type)",
-                "slug": "(slug)",
-                "name": "(filename)"
-            }
-        ],
-        "shaderpacks": [
-            {
-                "type": "(type)",
-                "slug": "(slug)",
-                "name": "(filename)"
-            }
-        ]
-    }
-    ```
-
+    :param manifest_file: This should be a path to a manifest file. \
+                          For the file structure, look at the README
     :param install_path: The base path everything should be installed to
+    :param side: 'client' or 'server': The side to be installed
+    :param install_modloader: If you want to install the modloader
+    :param launcher_path: The path of your launcher directory
     :param confirm: If the user should confirm the download
     """
 
