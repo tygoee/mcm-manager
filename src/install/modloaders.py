@@ -76,6 +76,15 @@ class forge:
         else:
             self.minecraft_jar = path.join(self.temp_dir, f"{mc_version}.jar")
 
+        # Check if java is installed
+        try:
+            check_call(['java', '--version'], stdout=DEVNULL)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                "Java was not found in the system's PATH. " +
+                "Please make sure you have Java installed and it is properly configured."
+            )
+
         self.minecraft_json: MinecraftJson = loads(request.urlopen(
             [item for item in loads(
                 request.urlopen(
