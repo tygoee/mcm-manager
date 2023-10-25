@@ -1,7 +1,7 @@
 from os import path
 from urllib import parse
 
-from _types import Media
+from .._types import Media
 
 
 def media_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[str, str]]:

@@ -8,10 +8,10 @@ from typing import overload
 from urllib import request
 from zipfile import ZipFile
 
-from install.urls import forge as forge_urls, fabric as fabric_urls
-from install.loadingbar import loadingbar
+from .urls import forge as forge_urls, fabric as fabric_urls
+from .loadingbar import loadingbar
 
-from _types import (
+from .._types import (
     Client, Server, Side,
     MinecraftJson, VersionJson,
     InstallProfile, Libraries

@@ -2,11 +2,11 @@ from json import load
 from os import path, get_terminal_size, mkdir
 from urllib import parse, request, error
 
-from install.headers import headers
-from install.urls import media_url
-from install.loadingbar import loadingbar
+from .headers import headers
+from .urls import media_url
+from .loadingbar import loadingbar
 
-from _types import Media, Manifest, MediaList, Side
+from .._types import Media, Manifest, MediaList, Side
 
 
 class prepare:

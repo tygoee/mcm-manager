@@ -1,7 +1,8 @@
 from os import get_terminal_size
 from typing import Collection, Generic, Literal, TypeVar, Optional, Type
 from types import TracebackType
-from install.filesize import size, traditional
+
+from .filesize import size, traditional
 
 T = TypeVar("T")
 

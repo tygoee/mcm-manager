@@ -1,7 +1,7 @@
 from os import path, makedirs
-from install import filesize, media, modloaders
+from .install import filesize, media, modloaders
 
-from _types import URLMedia, MediaList, Side, Answers
+from ._types import URLMedia, MediaList, Side, Answers
 
 app_root = path.join(path.dirname(path.realpath(__file__)), '..')
 
@@ -89,7 +89,7 @@ def install(manifest_file: str,
                          resourcepacks, manifest.get('shaderpacks', []))
 
 
-if __name__ == '__main__':
+def main():
     current_dir = path.dirname(path.realpath(__file__))
 
     # Define all questions
@@ -127,3 +127,7 @@ if __name__ == '__main__':
     print('\n', end='')
 
     install(**answers)
+
+
+if __name__ == '__main__':
+    main()
