@@ -1,7 +1,7 @@
 from os import path, makedirs
-from .install import filesize, media, modloaders
+from install import filesize, media, modloaders
 
-from ._types import URLMedia, MediaList, Side, Answers
+from install._types import URLMedia, MediaList, Side
 
 app_root = path.join(path.dirname(path.realpath(__file__)), '..')
 
@@ -90,6 +90,7 @@ def install(manifest_file: str,
 
 
 def main():
+    from _types import Answers
     current_dir = path.dirname(path.realpath(__file__))
 
     # Define all questions

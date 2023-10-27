@@ -3,7 +3,7 @@ This is a copy from `hurry.filesize` but with type annotations
 Credit to: https://pypi.org/project/hurry.filesize/
 """
 
-from .._types import SizeSystem
+from ._types import SizeSystem
 
 traditional: SizeSystem = [
     (1024 ** 5, 'P'),

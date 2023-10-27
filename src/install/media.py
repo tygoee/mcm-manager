@@ -6,7 +6,7 @@ from .headers import headers
 from .urls import media_url
 from .loadingbar import loadingbar
 
-from .._types import Media, Manifest, MediaList, Side
+from ._types import Media, Manifest, MediaList, Side
 
 
 class prepare:

@@ -11,7 +11,7 @@ from zipfile import ZipFile
 from .urls import forge as forge_urls, fabric as fabric_urls
 from .loadingbar import loadingbar
 
-from .._types import (
+from ._types import (
     Client, Server, Side,
     MinecraftJson, VersionJson,
     InstallProfile, Libraries
