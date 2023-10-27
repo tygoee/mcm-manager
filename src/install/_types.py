@@ -223,12 +223,3 @@ class InstallProfile(TypedDict):
     logo: str
     mirrorList: str
     welcome: str
-
-
-# --- main.py --- #
-class Answers(TypedDict):
-    manifest_file: str
-    install_path: str
-    side: Literal['client', 'server']
-    install_modloader: bool
-    launcher_path: str
