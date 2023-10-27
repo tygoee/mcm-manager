@@ -1,5 +1,12 @@
-# This is a copy from `hurry.filesize` but with type annotations
-# Source: https://pypi.org/project/hurry.filesize/
+# The following sofware is a redistribution of the Python
+# pip package `hurry.filesize` at August 14 2023 under the
+# Zope Public License (ZPL) Version 2.1.
+#
+# You should have received a copy of the Zope Public License Version 2.1
+# along with this program. If not, see <https://old.zope.dev/Resources/ZPL/>
+#
+# Copyright (C) Martijn Faassen, Startifact
+# <https://pypi.org/project/hurry.filesize/>
 
 from ._types import SizeSystem
 
