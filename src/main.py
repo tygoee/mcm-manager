@@ -1,7 +1,18 @@
+# This program is free software: you can redistribute it and/or modify it under the terms of
+# the GNU General Public License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this
+# program. If not, see <https://www.gnu.org/licenses/>.
+
 from os import path, makedirs
 from install import filesize, media, modloaders
 
-from _types import URLMedia, MediaList, Side, Answers
+from install._types import URLMedia, MediaList, Side
 
 app_root = path.join(path.dirname(path.realpath(__file__)), '..')
 
@@ -42,8 +53,7 @@ def install(manifest_file: str,
     resourcepacks: MediaList = manifest.get('resourcepacks', [])
     shaderpacks: MediaList = manifest.get('shaderpacks', [])
 
-    total_size = media.prepare(
-        install_path, side, mods, resourcepacks, shaderpacks)
+    total_size = media.prepare(install_path, side, manifest)
 
     # Give warnings for external sources
     external_media: list[URLMedia] = [_media for _media in [mod for mod in mods] +
@@ -85,11 +95,11 @@ def install(manifest_file: str,
                 print("Installing this modloader isn't supported yet.")
 
     # Download all files
-    media.download_files(total_size, install_path, side, mods,
-                         resourcepacks, manifest.get('shaderpacks', []))
+    media.download_files(total_size, install_path, side, manifest)
 
 
-if __name__ == '__main__':
+def main():
+    from _types import Answers
     current_dir = path.dirname(path.realpath(__file__))
 
     # Define all questions
@@ -127,3 +137,7 @@ if __name__ == '__main__':
     print('\n', end='')
 
     install(**answers)
+
+
+if __name__ == '__main__':
+    main()

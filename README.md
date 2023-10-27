@@ -17,7 +17,7 @@ You can get a mod slug/id from the mod url:
 - https://www.planetminecraft.com/texture-pack/1-13-1-16-unique-spawn-eggs/  
   └ `slug` = 1-13-1-16-unique-spawn-eggs
 
-To get the rest of the information, go to downloads → the file, right click and copy the download link:
+To get the rest of the information, go to downloads → the file, right click and copy the download url:
 
 - https://mediafilez.forgecdn.net/files/4586/218/worldedit-mod-7.2.15.jar  
   └ `name` = worldedit-mod-7.2.15.jar
@@ -92,7 +92,7 @@ An example file:
       "type": "url", // custom url
       "slug": "essential", // doesn't matter
       "name": "Essential-fabric_1-20-1.jar",
-      "link": "https://cdn.essential.gg/mods/60ecf53d6b26c76a26d49e5b/649c45fb8b045520b2c1c8b2/Essential-fabric_1-20-1.jar",
+      "url": "https://cdn.essential.gg/mods/60ecf53d6b26c76a26d49e5b/649c45fb8b045520b2c1c8b2/Essential-fabric_1-20-1.jar",
       "info": {
         "title": "Essential",
         "icon": "https://static.essential.gg/icon/256x256.png",

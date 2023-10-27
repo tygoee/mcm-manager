@@ -1,17 +1,27 @@
+# This program is free software: you can redistribute it and/or modify it under the terms of
+# the GNU General Public License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this
+# program. If not, see <https://www.gnu.org/licenses/>.
+
 from json import load
 from os import path, get_terminal_size, mkdir
 from urllib import parse, request, error
 
-from install.headers import headers
-from install.urls import media_url
-from install.loadingbar import loadingbar
+from .headers import headers
+from .urls import media_url
+from .loadingbar import loadingbar
 
-from _types import Media, Manifest, MediaList, Side
+from ._types import Media, Manifest, MediaList, Side
 
 
 class prepare:
-    def __new__(cls, install_path: str, side: Side, mods: MediaList,
-                resourcepacks: MediaList, shaderpacks: MediaList) -> int:
+    def __new__(cls, install_path: str, side: Side, manifest: Manifest) -> int:
         "Get the file size and check media validity while listing all media"
 
         # Define the class variables
@@ -22,9 +32,9 @@ class prepare:
         total_size = 0
 
         for media_type, media_list in {
-            'mod': mods,
-            'resourcepack': resourcepacks,
-            'shaderpack': shaderpacks
+            'mod': manifest.get('mods', []),
+            'resourcepack': manifest.get('resourcepacks', []),
+            'shaderpack': manifest.get('shaderpacks', [])
         }.items():
             total_size += cls.prepare_media(media_type, media_list)
 
@@ -127,9 +137,12 @@ class prepare:
         return size
 
 
-def download_files(total_size: int, install_path: str, side: Side, mods: MediaList,
-                   resourcepacks: MediaList, shaderpacks: MediaList) -> None:
+def download_files(total_size: int, install_path: str, side: Side, manifest: Manifest) -> None:
     "Download all files using a tqdm loading bar"
+
+    mods: MediaList = manifest.get('mods', [])
+    resourcepacks: MediaList = manifest.get('resourcepacks', [])
+    shaderpacks: MediaList = manifest.get('shaderpacks', [])
 
     for folder, media_list in {
         'mods': mods,
@@ -216,7 +229,7 @@ def download_files(total_size: int, install_path: str, side: Side, mods: MediaLi
     print('\033[?25h')  # Show the cursor
 
     total_files = len([media for media in mods +
-                      resourcepacks + shaderpacks if side in media['sides']])
+                      resourcepacks + shaderpacks if side in media.get('sides', [])])
 
     print(' ' * get_terminal_size().columns + '\r',
           f"Skipped {skipped_files}/{total_files} " +

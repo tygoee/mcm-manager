@@ -1,17 +1,28 @@
+# This program is free software: you can redistribute it and/or modify it under the terms of
+# the GNU General Public License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this
+# program. If not, see <https://www.gnu.org/licenses/>.
+
 from atexit import register
 from json import load, loads, dump
 from os import path, getenv, mkdir, rename
 from shutil import rmtree, copyfile
-from subprocess import CalledProcessError, check_call, DEVNULL
+from subprocess import check_call, DEVNULL
 from sys import platform
 from typing import overload
 from urllib import request
 from zipfile import ZipFile
 
-from install.urls import forge as forge_urls, fabric as fabric_urls
-from install.loadingbar import loadingbar
+from .urls import forge as forge_urls, fabric as fabric_urls
+from .loadingbar import loadingbar
 
-from _types import (
+from ._types import (
     Client, Server, Side,
     MinecraftJson, VersionJson,
     InstallProfile, Libraries
@@ -152,8 +163,8 @@ class forge:
         # in the arg string with **data
         arg = arg.format(**data)
 
-        # Extract when paths start witn '/'
-        if path.normpath(arg).startswith('/') and arg != self.minecraft_jar:
+        # Extract when paths ends with '.lzma'
+        if path.normpath(arg).endswith('.lzma'):
             with ZipFile(self.installer, 'r') as archive:
                 archive.extract(arg[1:], self.temp_dir)
             return path.join(self.temp_dir, path.normpath(arg[1:]))
@@ -381,12 +392,8 @@ class forge:
                 self.replace_arg_vars(arg, data) for arg in processor['args']
             ]
 
-            # Execute the command
-            try:
-                check_call(['java', '-jar', temp_file, *args], stdout=DEVNULL)
-            except CalledProcessError as e:
-                print(e)
-                exit(1)
+            # Execute the command, raises CalledProcessError when there's an error
+            check_call(['java', '-jar', temp_file, *args], stdout=DEVNULL)
 
             # Refresh the loading bar
             bar.refresh()
