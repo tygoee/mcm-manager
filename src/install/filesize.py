@@ -1,7 +1,5 @@
-"""
-This is a copy from `hurry.filesize` but with type annotations
-Credit to: https://pypi.org/project/hurry.filesize/
-"""
+# This is a copy from `hurry.filesize` but with type annotations
+# Source: https://pypi.org/project/hurry.filesize/
 
 from ._types import SizeSystem
 
