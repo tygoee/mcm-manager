@@ -42,8 +42,7 @@ def install(manifest_file: str,
     resourcepacks: MediaList = manifest.get('resourcepacks', [])
     shaderpacks: MediaList = manifest.get('shaderpacks', [])
 
-    total_size = media.prepare(
-        install_path, side, mods, resourcepacks, shaderpacks)
+    total_size = media.prepare(install_path, side, manifest)
 
     # Give warnings for external sources
     external_media: list[URLMedia] = [_media for _media in [mod for mod in mods] +
@@ -85,8 +84,7 @@ def install(manifest_file: str,
                 print("Installing this modloader isn't supported yet.")
 
     # Download all files
-    media.download_files(total_size, install_path, side, mods,
-                         resourcepacks, manifest.get('shaderpacks', []))
+    media.download_files(total_size, install_path, side, manifest)
 
 
 def main():

@@ -10,8 +10,7 @@ from ._types import Media, Manifest, MediaList, Side
 
 
 class prepare:
-    def __new__(cls, install_path: str, side: Side, mods: MediaList,
-                resourcepacks: MediaList, shaderpacks: MediaList) -> int:
+    def __new__(cls, install_path: str, side: Side, manifest: Manifest) -> int:
         "Get the file size and check media validity while listing all media"
 
         # Define the class variables
@@ -22,9 +21,9 @@ class prepare:
         total_size = 0
 
         for media_type, media_list in {
-            'mod': mods,
-            'resourcepack': resourcepacks,
-            'shaderpack': shaderpacks
+            'mod': manifest.get('mods', []),
+            'resourcepack': manifest.get('resourcepacks', []),
+            'shaderpack': manifest.get('shaderpacks', [])
         }.items():
             total_size += cls.prepare_media(media_type, media_list)
 
@@ -127,9 +126,12 @@ class prepare:
         return size
 
 
-def download_files(total_size: int, install_path: str, side: Side, mods: MediaList,
-                   resourcepacks: MediaList, shaderpacks: MediaList) -> None:
+def download_files(total_size: int, install_path: str, side: Side, manifest: Manifest) -> None:
     "Download all files using a tqdm loading bar"
+
+    mods: MediaList = manifest.get('mods', [])
+    resourcepacks: MediaList = manifest.get('resourcepacks', [])
+    shaderpacks: MediaList = manifest.get('shaderpacks', [])
 
     for folder, media_list in {
         'mods': mods,
