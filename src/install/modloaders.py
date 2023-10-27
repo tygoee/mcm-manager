@@ -2,7 +2,7 @@ from atexit import register
 from json import load, loads, dump
 from os import path, getenv, mkdir, rename
 from shutil import rmtree, copyfile
-from subprocess import CalledProcessError, check_call, DEVNULL
+from subprocess import check_call, DEVNULL
 from sys import platform
 from typing import overload
 from urllib import request
@@ -152,8 +152,8 @@ class forge:
         # in the arg string with **data
         arg = arg.format(**data)
 
-        # Extract when paths start witn '/'
-        if path.normpath(arg).startswith('/') and arg != self.minecraft_jar:
+        # Extract when paths ends with '.lzma'
+        if path.normpath(arg).endswith('.lzma'):
             with ZipFile(self.installer, 'r') as archive:
                 archive.extract(arg[1:], self.temp_dir)
             return path.join(self.temp_dir, path.normpath(arg[1:]))
@@ -381,12 +381,8 @@ class forge:
                 self.replace_arg_vars(arg, data) for arg in processor['args']
             ]
 
-            # Execute the command
-            try:
-                check_call(['java', '-jar', temp_file, *args], stdout=DEVNULL)
-            except CalledProcessError as e:
-                print(e)
-                exit(1)
+            # Execute the command, raises CalledProcessError when there's an error
+            check_call(['java', '-jar', temp_file, *args], stdout=DEVNULL)
 
             # Refresh the loading bar
             bar.refresh()
