@@ -218,7 +218,7 @@ def download_files(total_size: int, install_path: str, side: Side, manifest: Man
     print('\033[?25h')  # Show the cursor
 
     total_files = len([media for media in mods +
-                      resourcepacks + shaderpacks if side in media['sides']])
+                      resourcepacks + shaderpacks if side in media.get('sides', [])])
 
     print(' ' * get_terminal_size().columns + '\r',
           f"Skipped {skipped_files}/{total_files} " +
