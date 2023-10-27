@@ -67,9 +67,9 @@ MediaList = list[Media]
 class Manifest(TypedDict):
     "All information of the modpack"
     minecraft: Minecraft
-    mods: Media
-    resourcepacks: Media
-    shaderpacks: Media
+    mods: MediaList
+    resourcepacks: MediaList
+    shaderpacks: MediaList
 
 
 # --- modloaders.py --- #
