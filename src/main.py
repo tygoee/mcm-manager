@@ -104,7 +104,16 @@ def install(manifest_file: str,
 
 
 def main():
-    from _types import Answers
+    from typing import TypedDict, Literal
+
+    Answers = TypedDict("Answers", {
+        "manifest_file": str,
+        "install_path": str,
+        "side": Literal['client', 'server'],
+        "install_modloader": bool,
+        "launcher_path": str
+    })
+
     current_dir = path.dirname(path.realpath(__file__))
 
     # Define all questions
