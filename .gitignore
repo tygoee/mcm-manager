@@ -161,3 +161,4 @@ cython_debug/
 
 # Installation dirs
 .minecraft/
+gamedir/
