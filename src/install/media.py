@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from json import load
-from os import path, get_terminal_size, mkdir
+from os import path, mkdir
 from urllib import parse, request, error
 
 from .headers import headers
@@ -237,8 +237,7 @@ def download_files(total_size: int, install_path: str, side: Side, manifest: Man
     total_files = len([media for media in mods +
                       resourcepacks + shaderpacks if side in media.get('sides', [])])
 
-    print(' ' * get_terminal_size().columns + '\r',
-          f"Skipped {skipped_files}/{total_files} " +
+    print(f"Skipped {skipped_files}/{total_files} " +
           "files that were already installed" if skipped_files != 0 else '',
           sep=''
           )
