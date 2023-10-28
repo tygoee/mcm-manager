@@ -1,5 +1,9 @@
 # Minecraft Modpack Manager
 
+[![Version](https://img.shields.io/github/v/release/tygoee/mcm-manager?display_name=tag)](https://github.com/tygoee/mcm-manager/releases/latest)
+[![License](https://img.shields.io/github/license/tygoee/mcm-manager)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+![Repo size](https://img.shields.io/github/repo-size/tygoee/mcm-manager?logo=github)
+
 Minecraft modpack manager - This solves the problem of having to install mods manually. Currently, you need to edit the file manually, as this is still in it's alpha phase. You can currently download mods from curseforge, modrinth and planet minecraft and custom urls. You can also install forge automatically. Currently, mods, resourcepacks and shaderpacks are supported.
 
 ## Creating a mcm file
