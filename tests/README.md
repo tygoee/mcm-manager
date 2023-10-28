@@ -4,22 +4,10 @@ Tests are used to ensure the program doesn't break after something has changed. 
 
 ## Information
 
-For testing, the library `unittest` is used. Tests are made in the `tests/` directory, usually in the format of `test_(file).py`. As `src` is a package, you can import files using:
+For testing, the `unittest` library is used. Tests are made in the `tests/` directory, usually in the format of `test_(file).py`. As `src` is a package, you can import files using:
 
 ```python
 from src import main
-```
-
-For that reason, all code should be using relative imports, so the tests run. For example, you should use:
-
-```python
-from .install import media
-```
-
-Instead of:
-
-```python
-from install import media
 ```
 
 ## Running tests
