@@ -15,8 +15,34 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from os import path, mkdir
-from .vars import install_dir
+from json import dump
+from .vars import install_dir, launcher_dir
 
 # Create the install dir
 if not path.isdir(install_dir):
     mkdir(install_dir)
+
+# Create the launcher dir and example-manifest.json
+if not path.isdir(launcher_dir):
+    mkdir(launcher_dir)
+
+launcher_profiles = {
+    "profiles": {},
+    "settings": {
+        "crashAssistance": True,
+        "enableAdvanced": False,
+        "enableAnalytics": True,
+        "enableHistorical": False,
+        "enableReleases": True,
+        "enableSnapshots": False,
+        "keepLauncherOpen": False,
+        "profileSorting": "ByLastPlayed",
+        "showGameLog": False,
+        "showMenu": False,
+        "soundOn": False
+    },
+    "version": 3
+}
+
+with open(path.join(launcher_dir, 'launcher_profiles.json'), 'w') as fp:
+    dump(launcher_profiles, fp, indent=4)

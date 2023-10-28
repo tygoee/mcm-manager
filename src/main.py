@@ -119,7 +119,7 @@ def main():
     # Define all questions
     questions = [
         "Manifest file location (default: example-manifest.json): ",
-        "Install location (default: share/.minecraft): ",
+        "Install location (default: share/gamedir): ",
         "Install side (client/server, default: client): ",
         "Do you want to install the modloader? (Y/n, default: n): ",
         f"Launcher location (default: {modloaders.MINECRAFT_DIR}): "
@@ -138,7 +138,7 @@ def main():
     defaults = {
         "launcher_path": modloaders.MINECRAFT_DIR,
         "manifest_file": path.join(current_dir, '..', 'share', 'modpacks', 'example-manifest.json'),
-        "install_path": path.join(current_dir, '..', 'share', '.minecraft')
+        "install_path": path.join(current_dir, '..', 'share', 'gamedir')
     }
 
     for default in defaults:

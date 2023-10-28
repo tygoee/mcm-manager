@@ -37,7 +37,10 @@ def empty_dir(directory: str):
             rmtree(path.join(root, d))
 
 
+launcher_dir = path.realpath(
+    path.join(path.dirname(path.realpath(__file__)), '.minecraft'))
+
 install_dir = path.realpath(path.join(path.dirname(
-    path.realpath(__file__)), '.minecraft'))
+    path.realpath(__file__)), 'gamedir'))
 
 current_dir = path.dirname(path.realpath(__file__))
