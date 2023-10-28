@@ -97,7 +97,10 @@ class loadingbar(Generic[T]):
                 self.formatting_length += 1
 
         # Assign or correct bar_length
-        self.max_terminal_width = get_terminal_size().columns
+        try:
+            self.max_terminal_width = get_terminal_size().columns
+        except OSError:
+            self.max_terminal_width = 80
 
         if bar_length == None:
             self.bar_length = self.max_terminal_width
