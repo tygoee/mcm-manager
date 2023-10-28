@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import unittest
-from ..vars import quiet, empty_dir, install_dir
+from ..vars import quiet, empty_dir, install_dir, launcher_dir
 
 from src.install.modloaders import forge, fabric
 
@@ -24,7 +24,7 @@ class Install(unittest.TestCase):
     @quiet
     def test_forge_client(self):
         empty_dir(install_dir)
-        forge('1.20.1', '47.1.0', 'client', install_dir)
+        forge('1.20.1', '47.1.0', 'client', install_dir, launcher_dir)
 
     @quiet
     def test_forge_server(self):
