@@ -104,7 +104,8 @@ class prepare:
                 return 0
         except error.URLError as e:
             if e.reason.__str__() in ("[Errno -2] Name or service not known", "[Errno 11001] getaddrinfo failed"):
-                print(f"! WARNING: The mod {media['name']} was not found: {e.reason}")  # noqa
+                print(f"! WARNING: The mod {media['name']}" +
+                      f"was not found: {e.reason}")
                 return 0
             else:
                 raise e
@@ -195,8 +196,8 @@ def download_files(total_size: int, install_path: str, side: Side, manifest: Man
                 continue
 
             # Set the description
-            bar.set_desc(f"Downloading {parse.unquote(
-                path.basename(fname))}...")
+            file = parse.unquote(path.basename(fname))
+            bar.set_desc(f"Downloading {file}...")
 
             try:
                 # Download the file
