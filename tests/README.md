@@ -15,5 +15,5 @@ from src import main
 Running tests is pretty simple. As `unittest` is in the standard library, you don't need to install any additional pip libraries. To run tests, navigate to the github root directory ( `mcm-manager/` ) and run the following command:
 
 ```shell
-python3 -m unittest -v
+python3 -m unittest -vf
 ```
