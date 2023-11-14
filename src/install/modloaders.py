@@ -105,7 +105,7 @@ class forge:
         self.minecraft_json: MinecraftJson = loads(request.urlopen(
             [item for item in loads(
                 request.urlopen(
-                    forge_urls.version_manifest_v2()
+                    forge_urls.version_manifest_v2
                 ).read().decode('utf-8')
             )['versions'] if item['id'] == mc_version][0]['url']
         ).read().decode('utf-8'))

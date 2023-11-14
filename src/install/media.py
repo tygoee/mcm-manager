@@ -128,10 +128,18 @@ class prepare:
 
         size = 0
         for media in (media for media in media_list if cls.side in media['sides']):
-            # Add the corresponding url to media['_dl']
-            url, dl = media_url(
-                media, cls.install_path, media_type + 's')
-            media['_dl'] = (*dl, 0)
+            # Add the corresponding download info to media['_dl']
+            url = media_url(media)
+
+            dl_path = path.join(
+                cls.install_path,
+                media_type + 's',
+                parse.unquote(media['name'])
+            )
+
+            media['_dl'] = (
+                url, dl_path, 0
+            )
 
             # Append the media size to the total size and save it in media['_dl']
             size += cls.get_headers(media, url)
