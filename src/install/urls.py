@@ -14,13 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from os import path
-from urllib import parse
-
 from ._types import Media
 
 
-def media_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[str, str]]:
+def media_url(media: Media) -> str:
     """Generate an url to download"""
 
     match media['type']:
@@ -37,18 +34,16 @@ def media_url(media: Media, install_path: str, folder: str) -> tuple[str, tuple[
         case 'url':
             url: str = media['url']
 
-    return url, (url, path.join(install_path, folder, parse.unquote(media['name'])))
+    return url
 
 
 class forge:
+    version_manifest_v2 = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+
     @staticmethod
     def forge_installer_url(mc_version: str, forge_version: str) -> str:
         return "https://maven.minecraftforge.net/net/minecraftforge/forge/" + \
             f"{mc_version}-{forge_version}/forge-{mc_version}-{forge_version}-installer.jar"
-
-    @staticmethod
-    def version_manifest_v2() -> str:
-        return "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
 
 
 class fabric:

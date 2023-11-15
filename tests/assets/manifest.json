@@ -9,7 +9,7 @@
             "slug": "worldedit",
             "name": "worldedit-mod-7.2.15.jar",
             "id": 4586218,
-            "side": [
+            "sides": [
                 "server"
             ]
         },
@@ -18,7 +18,7 @@
             "slug": "sodium",
             "name": "sodium-fabric-mc1.20.1-0.5.1.jar",
             "id": "AANobbMIOkwCNtFH",
-            "side": [
+            "sides": [
                 "client"
             ]
         },

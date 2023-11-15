@@ -79,7 +79,7 @@ def install(manifest_file: str,
         f"Total file size: {filesize.size(total_size, system=filesize.alternative)}")
 
     # Ask for confirmation if confirm is True and install all modpacks
-    if confirm == True:
+    if confirm:
         if input("Continue? (Y/n) ").lower() not in ['y', '']:
             print("Cancelling...\n")
             exit()

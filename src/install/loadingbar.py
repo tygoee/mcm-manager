@@ -88,11 +88,14 @@ class loadingbar(Generic[T]):
         self.formatting_length = 0
         in_brackets = False
         for i in bar_format:
-            if i == '{':
-                in_brackets = True
-            if i == '}':
-                in_brackets = False
-                continue
+            match i:
+                case '{':
+                    in_brackets = True
+                case '}':
+                    in_brackets = False
+                    continue
+                case _: pass
+
             if not in_brackets:
                 self.formatting_length += 1
 
@@ -102,7 +105,7 @@ class loadingbar(Generic[T]):
         except OSError:
             self.max_terminal_width = 80
 
-        if bar_length == None:
+        if bar_length is None:
             self.bar_length = self.max_terminal_width
         elif bar_length >= self.max_terminal_width:
             self.bar_length = self.max_terminal_width

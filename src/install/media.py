@@ -128,10 +128,18 @@ class prepare:
 
         size = 0
         for media in (media for media in media_list if cls.side in media['sides']):
-            # Add the corresponding url to media['_dl']
-            url, dl = media_url(
-                media, cls.install_path, media_type + 's')
-            media['_dl'] = (*dl, 0)
+            # Add the corresponding download info to media['_dl']
+            url = media_url(media)
+
+            dl_path = path.join(
+                cls.install_path,
+                media_type + 's',
+                parse.unquote(media['name'])
+            )
+
+            media['_dl'] = (
+                url, dl_path, 0
+            )
 
             # Append the media size to the total size and save it in media['_dl']
             size += cls.get_headers(media, url)
@@ -141,6 +149,41 @@ class prepare:
 
         # At the end, return the total media size
         return size
+
+
+def download_file(url: str, fname: str, bar: loadingbar[int]):
+    try:
+        # Download and write the file
+        with request.urlopen(url) as resp, open(fname, 'wb') as media_file:
+            while True:
+                # Read the response data
+                data = resp.read(1024)
+
+                # Break if it's complete
+                if not data:
+                    break
+
+                # Update the bar
+                part_size = media_file.write(data)
+                bar.update(part_size)
+
+    except error.HTTPError:
+        # If the file is denied, it tries again while
+        # mimicking a common browser user agent
+        try:
+            with request.urlopen(
+                    request.Request(url, headers=headers)
+            ) as resp, open(fname, 'wb') as media_file:
+                while True:
+                    data = resp.read(1024)
+                    if not data:
+                        break
+                    part_size = media_file.write(data)
+                    bar.update(part_size)
+        except error.HTTPError:
+            pass  # The user has already been warned
+    except error.URLError:
+        pass  # The user has already been warned
 
 
 def download_files(total_size: int, install_path: str, side: Side, manifest: Manifest) -> None:
@@ -199,45 +242,15 @@ def download_files(total_size: int, install_path: str, side: Side, manifest: Man
             file = parse.unquote(path.basename(fname))
             bar.set_desc(f"Downloading {file}...")
 
-            try:
-                # Download the file
-                with request.urlopen(url) as resp:
-                    # Write the file
-                    with open(fname, 'wb') as media_file:
-                        while True:
-                            # Read the response data
-                            data = resp.read(1024)
-
-                            # Break if it's complete
-                            if not data:
-                                break
-
-                            # Update the bar
-                            part_size = media_file.write(data)
-                            bar.update(part_size)
-            except error.HTTPError:
-                # If the file is denied, it tries again while
-                # mimicking a common browser user agent
-                try:
-                    with request.urlopen(request.Request(url, headers=headers)) as resp:
-                        with open(fname, 'wb') as media_file:
-                            while True:
-                                data = resp.read(1024)
-                                if not data:
-                                    break
-                                part_size = media_file.write(data)
-                                bar.update(part_size)
-                except error.HTTPError:
-                    pass  # The user has already been warned
-            except error.URLError:
-                pass  # The user has already been warned
+            download_file(url, fname, bar)
 
     print('\033[?25h')  # Show the cursor
 
     total_files = len([media for media in mods +
                       resourcepacks + shaderpacks if side in media.get('sides', [])])
 
-    print(f"Skipped {skipped_files}/{total_files} " +
-          "files that were already installed" if skipped_files != 0 else '',
-          sep=''
-          )
+    print(
+        f"Skipped {skipped_files}/{total_files} " +
+        "files that were already installed" if skipped_files != 0 else '',
+        sep=''
+    )
