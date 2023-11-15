@@ -15,8 +15,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from os import path, makedirs
-from install import filesize, media, modloaders
+from argparse import ArgumentParser
 
+from install import filesize, media, modloaders
 from install._types import URLMedia, MediaList, Side
 
 app_root = path.join(path.dirname(path.realpath(__file__)), '..')
@@ -107,7 +108,9 @@ def install(manifest_file: str,
     media.download_files(total_size, install_path, side, manifest)
 
 
-def main():
+def cli():
+    """Ask questions and execute `install()` with the answers"""
+
     from typing import TypedDict, Literal
 
     Answers = TypedDict("Answers", {
@@ -159,6 +162,32 @@ def main():
     print('\n', end='')
 
     install(**answers)
+
+
+def main():
+    # Make a parser and subparsers
+    parser = ArgumentParser(
+        prog="mcm-manager",
+        description="Minecraft Modpack Manager"
+    )
+
+    parser.add_argument(
+        'cli', nargs='?', default=False,
+        help='Use a CLI interface to install a modloader'
+    )
+
+    # TODO make an 'install' option with arguments
+    # to call the install() function directly
+
+    # Get the args and execute the command
+    args = parser.parse_args()
+
+    if args.cli:
+        cli()
+
+    # TODO else, execute the gui (not finished)
+    else:
+        cli()
 
 
 if __name__ == '__main__':
