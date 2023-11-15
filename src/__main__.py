@@ -80,9 +80,13 @@ def install(manifest_file: str,
 
     # Ask for confirmation if confirm is True and install all modpacks
     if confirm:
-        if input("Continue? (Y/n) ").lower() not in ['y', '']:
-            print("Cancelling...\n")
-            exit()
+        try:
+            if input("Continue? (Y/n) ").lower() not in ['y', '']:
+                print("Cancelling...\n")
+                exit()
+        except KeyboardInterrupt:
+            print(end='\n')
+            exit(130)
     else:
         print("Continue (Y/n) ")
 
@@ -126,13 +130,17 @@ def main():
     ]
 
     # Ask all questions
-    answers: Answers = {
-        "manifest_file": input(questions[0]),
-        "install_path": input(questions[1]),
-        "side": 'server' if input(questions[2]) == 'server' else 'client',
-        "install_modloader": (inst_modl := True if input(questions[3]).lower() == 'y' else False),
-        "launcher_path": input(questions[4]) if inst_modl else ''
-    }
+    try:
+        answers: Answers = {
+            "manifest_file": input(questions[0]),
+            "install_path": input(questions[1]),
+            "side": 'server' if input(questions[2]) == 'server' else 'client',
+            "install_modloader": (inst_modl := True if input(questions[3]).lower() == 'y' else False),
+            "launcher_path": input(questions[4]) if inst_modl else ''
+        }
+    except KeyboardInterrupt:
+        print(end='\n')
+        exit(130)
 
     # Set the defaults
     defaults = {
