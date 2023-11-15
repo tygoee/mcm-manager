@@ -30,7 +30,8 @@ from .loadingbar import loadingbar
 from ._types import (
     Client, Server, Side,
     MinecraftJson, VersionJson,
-    InstallProfile, Libraries
+    InstallProfile, Libraries,
+    Library, OSLibrary
 )
 
 # Define the minecraft directory
@@ -250,23 +251,76 @@ class forge:
 
         # Download everything
         for fname, url in downloads.items():
-            with request.urlopen(url) as resp:
-                with open(path.join(fname), 'wb') as mod_file:
-                    while True:
-                        resp_data = resp.read(1024)
-                        if not resp_data:
-                            break
-                        mod_file.write(resp_data)
+            with request.urlopen(url) as resp, open(path.join(fname), 'wb') as mod_file:
+                while True:
+                    resp_data = resp.read(1024)
+                    if not resp_data:
+                        break
+                    mod_file.write(resp_data)
 
-    def install_libraries(self) -> None:
-        """Installs all libraries"""
-
+    def download_library(self, bar: loadingbar[Library | OSLibrary], library: Library) -> None:
+        """Download a library"""
         # Define the java os names
         osdict = {
             "windows": "win32",
             "linux": "linux",
             "osx": "darwin"
         }
+
+        # Don't download if it's not for the current os
+        if 'action' in library and library['action'] == 'allow' and \
+                platform != osdict[library['os']['name']]:
+            bar.update(library['size'])
+            bar.refresh()
+            return
+
+        if 'action' in library and library['action'] == 'disallow' and \
+                platform == osdict[library['os']['name']]:
+            bar.update(library['size'])
+            bar.refresh()
+            return
+
+        # Define the library path
+        library_path = path.normpath(library['path'])
+        full_library_path = path.join(
+            self.launcher_dir, 'libraries', library_path)
+
+        # Make the directories to place the files in
+        for index, directory in enumerate(
+            splitted_path := ['libraries', *library_path.split(path.sep)[:-1]]
+        ):
+            if not path.isdir(joined_path := path.join(
+                    self.launcher_dir, *splitted_path[:index], directory)):
+                mkdir(joined_path)
+
+        # If the url is '', copy from the installer
+        if library['url'] == '':
+            with ZipFile(self.installer) as archive:
+                archive.extract(f"maven/{library['path']}", self.temp_dir)
+            if not path.isfile(full_library_path):
+                rename(path.join(self.temp_dir, 'maven',
+                                 library_path), full_library_path)  # Move to the right dir
+            return
+
+        # Check if the files don't already exist
+        if path.isfile(full_library_path):
+            # Just update the bar and return if they exist
+            bar.update(library['size'])
+            bar.refresh()
+            return
+
+        # Download the files
+        # TODO: Check the sha1
+        with request.urlopen(library['url']) as resp, open(full_library_path, 'wb') as mod_file:
+            while True:
+                resp_data = resp.read(1024)
+                if not resp_data:
+                    break
+                size = mod_file.write(resp_data)
+                bar.update(size)
+
+    def install_libraries(self) -> None:
+        """Installs all libraries"""
 
         # Define the libaries
         self.libraries: Libraries = {}
@@ -294,57 +348,7 @@ class forge:
             disappear=True,
             total=total_size,
         )):
-            # Don't download if it's not for the current os
-            if 'action' in library and library['action'] == 'allow':
-                if platform != osdict[library['os']['name']]:
-                    bar.update(library['size'])
-                    bar.refresh()
-                    continue
-            if 'action' in library and library['action'] == 'disallow':
-                if platform == osdict[library['os']['name']]:
-                    bar.update(library['size'])
-                    bar.refresh()
-                    continue
-
-            # Define the library path
-            library_path = path.normpath(library['path'])
-            full_library_path = path.join(
-                self.launcher_dir, 'libraries', library_path)
-
-            # Make the directories to place the files in
-            for index, directory in enumerate(
-                splitted_path := ['libraries', *library_path.split(path.sep)[:-1]]
-            ):
-                if not path.isdir(joined_path := path.join(
-                        self.launcher_dir, *splitted_path[:index], directory)):
-                    mkdir(joined_path)
-
-            # If the url is '', copy from the installer
-            if library['url'] == '':
-                with ZipFile(self.installer) as archive:
-                    archive.extract(f"maven/{library['path']}", self.temp_dir)
-                if not path.isfile(full_library_path):
-                    rename(path.join(self.temp_dir, 'maven',
-                                     library_path), full_library_path)  # Move to the right dir
-                continue
-
-            # Check if the files don't already exist
-            if path.isfile(full_library_path):
-                # Just update the bar and continue if they exist
-                bar.update(library['size'])
-                bar.refresh()
-                continue
-
-            # Download the files
-            # TODO: Check the sha1
-            with request.urlopen(library['url']) as resp:
-                with open(full_library_path, 'wb') as mod_file:
-                    while True:
-                        resp_data = resp.read(1024)
-                        if not resp_data:
-                            break
-                        size = mod_file.write(resp_data)
-                        bar.update(size)
+            self.download_library(bar, library)
 
     def build_processors(self) -> None:
         """Build the processors"""
@@ -378,9 +382,15 @@ class forge:
             )
 
             # Copy all libraries to the destination jar file
-            with ZipFile(path.join(self.temp_dir, path.basename(self.libraries[processor['jar']]['path'])), 'a') as dest_archive:
+            with ZipFile(
+                path.join(self.temp_dir, path.basename(
+                    self.libraries[processor['jar']]['path'])), 'a'
+            ) as dest_archive:
                 for classpath in processor['classpath']:
-                    with ZipFile(path.join(self.launcher_dir, 'libraries', path.normpath(self.libraries[classpath]['path'])), 'r') as src_archive:
+                    with ZipFile(
+                        path.join(self.launcher_dir, 'libraries', path.normpath(
+                            self.libraries[classpath]['path'])), 'r'
+                    ) as src_archive:
                         for item in src_archive.infolist():
                             # If it's not a class file or it's
                             # the module info file, continue

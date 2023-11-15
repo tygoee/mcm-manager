@@ -57,7 +57,8 @@ class Install(unittest.TestCase):
             "type": "url",
             "slug": "essential",
             "name": "Essential-fabric_1-20-1.jar",
-            "url": "https://cdn.essential.gg/mods/60ecf53d6b26c76a26d49e5b/649c45fb8b045520b2c1c8b2/Essential-fabric_1-20-1.jar",
+            "url": "https://cdn.essential.gg/mods/60ecf53d6b26c76a26d49e5b/" +
+                   "649c45fb8b045520b2c1c8b2/Essential-fabric_1-20-1.jar",
             "info": {
                 "title": "Essential",
                 "icon": "https://static.essential.gg/icon/256x256.png",
@@ -73,7 +74,8 @@ class Install(unittest.TestCase):
         cases = {
             media_url(cf_media): 'https://mediafilez.forgecdn.net/files/4586/218/worldedit-mod-7.2.15.jar',
             media_url(pm_media): 'https://static.planetminecraft.com/files/resource_media/texture/unique-spawn-eggs-v1-5.zip',
-            media_url(mr_media): 'https://cdn-raw.modrinth.com/data/AANobbMI/versions/OkwCNtFH/sodium-fabric-mc1.20.1-0.5.1.jar',
+            media_url(mr_media): 'https://cdn-raw.modrinth.com/data/AANobbMI/versions/' +
+                                 'OkwCNtFH/sodium-fabric-mc1.20.1-0.5.1.jar',
             media_url(url_media): url_media['url']
         }
 
