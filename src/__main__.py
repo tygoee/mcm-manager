@@ -98,7 +98,7 @@ def install(manifest_file: str,
                 if side == 'client':
                     modloaders.forge(modpack_version, modloader_version,
                                      side, install_path, launcher_path)
-                if side == 'server':
+                elif side == 'server':
                     modloaders.forge(modpack_version, modloader_version,
                                      side, install_path)
             case _:
