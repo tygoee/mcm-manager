@@ -50,3 +50,6 @@ class Install(unittest.TestCase):
         empty_dir(install_dir)
         download_files(self.total_size_server,
                        install_dir, 'server', manifest)
+
+    def tearDown(self):
+        empty_dir(install_dir)

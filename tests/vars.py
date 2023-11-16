@@ -29,12 +29,13 @@ def quiet(func: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-def empty_dir(directory: str):
-    for root, dirs, files in walk(directory):
-        for f in files:
-            remove(path.join(root, f))
-        for d in dirs:
-            rmtree(path.join(root, d))
+def empty_dir(*directories: str):
+    for directory in directories:
+        for root, dirs, files in walk(directory):
+            for f in files:
+                remove(path.join(root, f))
+            for d in dirs:
+                rmtree(path.join(root, d))
 
 
 launcher_dir = path.realpath(

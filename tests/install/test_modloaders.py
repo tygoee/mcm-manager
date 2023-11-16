@@ -31,6 +31,9 @@ class Install(unittest.TestCase):
         empty_dir(install_dir)
         forge('1.20.1', '47.1.0', 'server', install_dir)
 
+    def tearDown(self):
+        empty_dir(install_dir, launcher_dir)
+
 
 if False:  # Tests of unfinished features
     @quiet
