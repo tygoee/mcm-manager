@@ -22,14 +22,14 @@ def media_url(media: Media) -> str:
 
     match media['type']:
         case 'cf':
-            url = "https://mediafilez.forgecdn.net/files/" + \
-                f"{int(str(media['id'])[:4])}/" +  \
+            url = "https://mediafilez.forgecdn.net/files/" \
+                f"{int(str(media['id'])[:4])}/" \
                 f"{int(str(media['id'])[4:])}/{media['name']}"
         case 'mr':
-            url = "https://cdn-raw.modrinth.com/data/" + \
+            url = "https://cdn-raw.modrinth.com/data/" \
                 f"{media['id'][:8]}/versions/{media['id'][8:]}/{media['name']}"
         case 'pm':
-            url = "https://static.planetminecraft.com/files/resource_media/" + \
+            url = "https://static.planetminecraft.com/files/resource_media/" \
                 f"{media['media']}/{media['name']}"
         case 'url':
             url: str = media['url']
@@ -42,7 +42,7 @@ class forge:
 
     @staticmethod
     def forge_installer_url(mc_version: str, forge_version: str) -> str:
-        return "https://maven.minecraftforge.net/net/minecraftforge/forge/" + \
+        return "https://maven.minecraftforge.net/net/minecraftforge/forge/" \
             f"{mc_version}-{forge_version}/forge-{mc_version}-{forge_version}-installer.jar"
 
 
