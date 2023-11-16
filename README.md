@@ -6,11 +6,29 @@
 
 Minecraft modpack manager - This solves the problem of having to install mods manually. Currently, you need to edit the file manually, as this is still in it's alpha phase. You can currently download mods from curseforge, modrinth and planet minecraft and custom urls. You can also install forge automatically. Currently, mods, resourcepacks and shaderpacks are supported.
 
+## "Building" to a `.pyz` file
+
+To make a `.pyz` file, you need to zip the entirety of `src/`, rename it extension to `mcm-manager.pyz` and run:
+
+Unix/Linux:
+
+```shell
+python3 mcm-manager.pyz
+```
+
+Windows:
+
+```shell
+python mcm-manager.pyz
+```
+
+To make it an app always accessible from the command line in Unix/Linux, add the [shebang](<https://en.wikipedia.org/wiki/Shebang_(Unix)>) `#!/usr/bin/python3` at the start of the `.pyz` file and copy it to `~/.local/bin/`.
+
 ## Creating a mcm file
 
 The mod types are `cf`, `mr`, `pm` and `url`
 
-You can get a mod slug/id from the mod url:
+You can get a mod slug/id from the download page url (which you copy from the url bar or by going to downloads → the file → right click → Go to download page):
 
 - https://www.curseforge.com/minecraft/mc-mods/worldedit/download/4586218  
   ├ `slug` = worldedit  
@@ -21,7 +39,7 @@ You can get a mod slug/id from the mod url:
 - https://www.planetminecraft.com/texture-pack/1-13-1-16-unique-spawn-eggs/  
   └ `slug` = 1-13-1-16-unique-spawn-eggs
 
-To get the rest of the information, go to downloads → the file, right click and copy the download url:
+To get the rest of the information, go to downloads → the file → right click → the download url:
 
 - https://mediafilez.forgecdn.net/files/4586/218/worldedit-mod-7.2.15.jar  
   └ `name` = worldedit-mod-7.2.15.jar
