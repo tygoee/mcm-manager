@@ -57,7 +57,7 @@ class Install(unittest.TestCase):
             "type": "url",
             "slug": "essential",
             "name": "Essential-fabric_1-20-1.jar",
-            "url": "https://cdn.essential.gg/mods/60ecf53d6b26c76a26d49e5b/" +
+            "url": "https://cdn.essential.gg/mods/60ecf53d6b26c76a26d49e5b/"
                    "649c45fb8b045520b2c1c8b2/Essential-fabric_1-20-1.jar",
             "info": {
                 "title": "Essential",

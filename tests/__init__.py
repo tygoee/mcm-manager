@@ -46,3 +46,5 @@ launcher_profiles = {
 
 with open(path.join(launcher_dir, 'launcher_profiles.json'), 'w') as fp:
     dump(launcher_profiles, fp, indent=4)
+
+del path, mkdir, dump, install_dir, launcher_dir, launcher_profiles, fp
