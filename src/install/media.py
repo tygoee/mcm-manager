@@ -28,25 +28,22 @@ from ._types import Manifest, URLMedia, Media, MediaList, Side
 
 
 class prepare:
-    def __new__(cls, install_path: str, side: Side, manifest: Manifest) -> int:
+    def __init__(self, install_path: str, side: Side, manifest: Manifest) -> None:
         "Get the file size and check media validity while listing all media"
 
         # Define the class variables
-        cls.install_path = install_path
-        cls.side: Side = side
+        self.install_path = install_path
+        self.side: Side = side
 
         # Prepare the media
-        total_size = 0
+        self.total_size = 0
 
         for media_type, media_list in {
             'mod': manifest.get('mods', []),
             'resourcepack': manifest.get('resourcepacks', []),
             'shaderpack': manifest.get('shaderpacks', [])
         }.items():
-            total_size += cls.prepare_media(media_type, media_list)
-
-        # At the end, return the total mods size
-        return total_size
+            self._prepare_media(media_type, media_list)
 
     @classmethod
     def load_manifest(cls, filename: str) -> Manifest:
@@ -68,8 +65,7 @@ class prepare:
 
         return manifest
 
-    @classmethod
-    def check_media_validity(cls, media_list: MediaList, media_type: str) -> None:
+    def _check_media_validity(self, media_list: MediaList, media_type: str) -> None:
         "Check for the modpack file validity"
         for media in media_list:
             for key in ['type', 'slug', 'name']:
@@ -88,8 +84,7 @@ class prepare:
             if 'sides' not in media.keys():
                 media['sides'] = sides
 
-    @classmethod
-    def get_headers(cls, media: Media, url: str) -> int:
+    def _get_headers(self, media: Media, url: str) -> None:
         "Recieve the content-length headers"
         try:
             size = int(request.urlopen(
@@ -103,54 +98,47 @@ class prepare:
             except error.HTTPError as e:
                 print(f"! WARNING: Could not download {media['name']}: \n{e}")
 
-                return 0
+                return
         except error.URLError as e:
             if e.reason.__str__() in ("[Errno -2] Name or service not known", "[Errno 11001] getaddrinfo failed"):
                 print(f"! WARNING: The mod {media['name']}" +
                       f"was not found: {e.reason}")
-                return 0
+                return
             else:
                 raise e
 
-        # Add the size to the tuple
+        # Add the size to the tuple and the total size
         if '_dl' in media:
             media['_dl'] = media['_dl'][:-1] + (size,)
 
-        return size
+        self.total_size += size
 
-    @classmethod
-    def prepare_media(cls, media_type: str, media_list: MediaList) -> int:
+    def _prepare_media(self, media_type: str, media_list: MediaList) -> None:
         if len(media_list) == 0:
-            return 0
+            return
 
-        cls.check_media_validity(media_list, media_type)
+        self._check_media_validity(media_list, media_type)
 
         # List the installed media and prepare the modpack
         print(f"\n{media_type.capitalize()}s: ")
 
-        size = 0
-        for media in (media for media in media_list if cls.side in media['sides']):
+        for media in (media for media in media_list if self.side in media['sides']):
             # Add the corresponding download info to media['_dl']
             url = media_url(media)
 
             dl_path = path.join(
-                cls.install_path,
+                self.install_path,
                 media_type + 's',
                 parse.unquote(media['name'])
             )
 
-            media['_dl'] = (
-                url, dl_path, 0
-            )
+            media['_dl'] = (url, dl_path, 0)
 
-            # Append the media size to the total size and save it in media['_dl']
-            size += cls.get_headers(media, url)
+            # Get the headers for appending the total size
+            self._get_headers(media, url)
 
             # Print the media name
             print(f"  {media['slug']} ({parse.unquote(media['name'])})")
-
-        # At the end, return the total media size
-        return size
 
 
 def download_file(url: str, fname: str, bar: loadingbar[int]):
@@ -304,7 +292,7 @@ def install(
     resourcepacks: MediaList = manifest.get('resourcepacks', [])
     shaderpacks: MediaList = manifest.get('shaderpacks', [])
 
-    total_size = prepare(install_path, side, manifest)
+    total_size = prepare(install_path, side, manifest).total_size
 
     # Give warnings for external sources
     external_media: list[URLMedia] = [_media for _media in [mod for mod in mods] +

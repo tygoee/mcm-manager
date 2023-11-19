@@ -25,6 +25,7 @@ manifest_file = path.join(current_dir, 'assets', 'manifest.json')
 
 
 class Install(unittest.TestCase):
+    # These tests need some serious improvement
     def test_media(self):
         self._test_prepare()
         self._test_download()
@@ -34,10 +35,16 @@ class Install(unittest.TestCase):
         manifest = prepare.load_manifest(manifest_file)
 
         empty_dir(install_dir)
-        self.total_size_client = prepare(install_dir, 'client', manifest)
+        self.total_size_client = prepare(
+            install_dir, 'client', manifest).total_size
+
+        self.assertIsInstance(self.total_size_client, int)
 
         empty_dir(install_dir)
-        self.total_size_server = prepare(install_dir, 'server', manifest)
+        self.total_size_server = prepare(
+            install_dir, 'server', manifest).total_size
+
+        self.assertIsInstance(self.total_size_server, int)
 
     @quiet
     def _test_download(self):
