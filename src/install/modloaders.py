@@ -28,7 +28,7 @@ from .urls import forge as forge_urls, fabric as fabric_urls
 from .loadingbar import loadingbar
 
 from ._types import (
-    Client, Server, Side,
+    Client, Server, Side, Modloader,
     MinecraftJson, VersionJson,
     InstallProfile, Libraries,
     Library, OSLibrary
@@ -442,3 +442,33 @@ class fabric:
             self.mc_version, self.fabric_version,
             'server', 'json'
         )).read().decode('utf-8'))
+
+
+def inst_modloader(
+    modloader: Modloader,
+    modpack_version: str,
+    modloader_version: str,
+    side: Side,
+    install_path: str,
+    launcher_path: str
+):
+    """
+    Installs the modloader. Used internally by media.py
+
+    :param mc_version: The minecraft version
+    :param modpack_version: The modpack version
+    :param side: The side; `'client'` or `'server'`
+    :param install_dir: The directory the modloader gets installed
+    :param launcher_dir: The launcher dir (ignored if on server side)
+    """
+
+    match modloader:
+        case 'forge':
+            if side == 'client':
+                forge(modpack_version, modloader_version,
+                      side, install_path, launcher_path)
+            elif side == 'server':
+                forge(modpack_version, modloader_version,
+                      side, install_path)
+        case _:
+            print("WARNING: Couldn't install modloader because it isn't supported.")

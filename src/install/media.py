@@ -21,8 +21,10 @@ from urllib import parse, request, error
 from .headers import headers
 from .urls import media_url
 from .loadingbar import loadingbar
+from .modloaders import inst_modloader, MINECRAFT_DIR
+from .filesize import size, alternative
 
-from ._types import Media, Manifest, MediaList, Side
+from ._types import Manifest, URLMedia, Media, MediaList, Side
 
 
 class prepare:
@@ -187,7 +189,14 @@ def download_file(url: str, fname: str, bar: loadingbar[int]):
 
 
 def download_files(total_size: int, install_path: str, side: Side, manifest: Manifest) -> None:
-    "Download all files using a tqdm loading bar"
+    """
+    Download all files with a loading bar
+
+    :param total_size: The total size of all media
+    :param install_path: The path it's going to be installed to
+    :param side: The side; `'client'` or `'server'`
+    :param manifest: The manifest data from `prepare.load_manifest()`
+    """
 
     mods: MediaList = manifest.get('mods', [])
     resourcepacks: MediaList = manifest.get('resourcepacks', [])
@@ -254,3 +263,82 @@ def download_files(total_size: int, install_path: str, side: Side, manifest: Man
         "files that were already installed" if skipped_files != 0 else '',
         sep=''
     )
+
+
+def install(
+    manifest_file: str,
+    install_path: str = path.join(path.join(path.dirname(
+        path.realpath(__file__)), '..'), 'share', '.minecraft'),
+    side: Side = 'client',
+    install_modloader: bool = True,
+    launcher_path: str = MINECRAFT_DIR,
+    confirm: bool = True
+) -> None:
+    """
+    Install a list of mods, resourcepacks, shaderpacks and config files. Arguments:
+
+    :param manifest_file: This should be a path to a manifest file. \
+                          For the file structure, look at the README
+    :param install_path: The base path everything should be installed to
+    :param side: `'client'` or `'server'`: The side to be installed
+    :param inst_modloader: If you want to install the modloader
+    :param launcher_path: The path of your launcher directory
+    :param confirm: If the user should confirm the download
+    """
+
+    # Import the manifest file
+    manifest = prepare.load_manifest(manifest_file)
+
+    # List the modpack info
+    modpack_version: str = manifest['minecraft']['version']
+    modloader: str = manifest['minecraft']['modloader'].split(
+        '-', maxsplit=1)[0]
+    modloader_version: str = manifest['minecraft']['modloader'].split(
+        '-', maxsplit=1)[1]
+
+    print(f"Modpack version: {modpack_version}\n" +
+          f"Mod loader: {modloader}\n"
+          f"Mod loader version: {modloader_version}")
+
+    mods: MediaList = manifest.get('mods', [])
+    resourcepacks: MediaList = manifest.get('resourcepacks', [])
+    shaderpacks: MediaList = manifest.get('shaderpacks', [])
+
+    total_size = prepare(install_path, side, manifest)
+
+    # Give warnings for external sources
+    external_media: list[URLMedia] = [_media for _media in [mod for mod in mods] +
+                                      [resourcepack for resourcepack in resourcepacks] +
+                                      [shaderpack for shaderpack in shaderpacks]
+                                      if _media['type'] == 'url']
+    if len(external_media) != 0:
+        print("\nWARNING! Some mods/resourcepacks/shaderpacks are from"
+              " external sources and could harm your system:")
+        for _media in external_media:
+            print(f"  {_media['slug']} ({_media['name']}): {_media['url']}")
+
+    # Print the mod info
+    print(
+        f"\n{len(mods)} mods, {len(resourcepacks)} recourcepacks, {len(shaderpacks)} shaderpacks\n"
+        f"Total file size: {size(total_size, system=alternative)}"
+    )
+
+    # Ask for confirmation if confirm is True and install all modpacks
+    if confirm:
+        try:
+            if input("Continue? (Y/n) ").lower() not in ['y', '']:
+                print("Cancelling...\n")
+                exit()
+        except KeyboardInterrupt:
+            print(end='\n')
+            exit(130)
+    else:
+        print("Continue (Y/n) ")
+
+    # Download and install the modloader
+    if install_modloader:
+        inst_modloader(modloader, modpack_version, modloader_version,
+                       side, install_path, launcher_path)
+
+    # Download all files
+    download_files(total_size, install_path, side, manifest)

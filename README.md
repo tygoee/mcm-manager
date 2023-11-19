@@ -19,7 +19,7 @@ git clone https://github.com/tygoee/mcm_manager.git
 2. Using python `zipapp`, make a pyz file
 
 ```shell
-python3 -m zipapp mcm_manager
+python3 -m zipapp mcm_manager/ -m src.runner:main
 ```
 
 To run it
