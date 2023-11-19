@@ -19,8 +19,8 @@ from dataclasses import dataclass, fields
 from os import path, makedirs
 from typing import Any, Literal, Optional, TypedDict, TypeVar
 
-from install import filesize, media, modloaders
-from install._types import URLMedia, MediaList, Side
+from src.install import filesize, media, modloaders
+from src.install._types import URLMedia, MediaList, Side
 
 
 class Options(TypedDict):
