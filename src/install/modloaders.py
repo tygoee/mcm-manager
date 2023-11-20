@@ -27,6 +27,8 @@ from zipfile import ZipFile
 from .urls import forge as forge_urls, fabric as fabric_urls
 from .loadingbar import loadingbar
 
+from ..common.maven_coords import maven_to_file
+
 from ._types import (
     Client, Server, Side, Modloader,
     MinecraftJson, VersionJson,
@@ -169,54 +171,21 @@ class forge:
         # in the arg string with **data
         arg = arg.format(**data)
 
-        # Extract when paths ends with '.lzma'
-        if path.normpath(arg).endswith('.lzma'):
+        # Extract when a path ends with '.lzma'
+        if arg.endswith('.lzma'):
             with ZipFile(self.installer, 'r') as archive:
                 archive.extract(arg[1:], self.temp_dir)
             return path.join(self.temp_dir, path.normpath(arg[1:]))
 
-        # Return arg if it isn't "[something]"
+        # Return arg when it isn't "[something]"
         if arg[0] != '[' and arg[-1] != ']':
             return arg
 
         # Remove the brackets
-        arg = arg.replace('[', '').replace(']', '')
-
-        # Split the file extension
-        if '@' in arg:
-            arg, file_extension = arg.split('@', 1)
-        else:
-            file_extension = 'jar'
-
-        # Create the file and folder path
-        folder = (
-            # Until the first colon, replace
-            # ':' and '.' with path.sep
-            arg[:arg.find(':')]
-            .replace(':', '.')
-            .replace('.', path.sep) +
-
-            # Then, do the same
-            # until the third colon
-            (arg[arg.find(':'):]
-             if arg.count(':') != 3
-             else arg[arg.find(':'):
-                      arg.rfind(':')]
-             ).replace(':', path.sep)
-        )
-
-        file = (
-            # Select everything from
-            # the first colon and
-            # replace ':' with '-'
-            arg[arg.find(':')+1:]
-            .replace(':', '-') +
-
-            # Add the file extension
-            '.' + file_extension)
+        arg = arg[1:-1]
 
         # Return the full path
-        return path.join(self.launcher_dir, 'libraries', folder, file)
+        return maven_to_file(self.launcher_dir, 'libraries', arg)
 
     def download_jar_files(self) -> None:
         """Download the jar files"""
