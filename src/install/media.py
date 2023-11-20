@@ -320,8 +320,6 @@ def install(
         except KeyboardInterrupt:
             print(end='\n')
             exit(130)
-    else:
-        print("Continue (Y/n) ")
 
     # Download and install the modloader
     if install_modloader:
