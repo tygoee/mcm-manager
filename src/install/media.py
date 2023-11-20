@@ -219,7 +219,7 @@ def download_files(total_size: int, install_path: str, side: Side, manifest: Man
         disappear=True
     ) as bar:
         bar: loadingbar[int]  # The only way it worked out
-        for url, fname, size, sides in iterator:
+        for url, fname, fsize, sides in iterator:
             if side not in sides:
                 # As the size isn't calculated, it
                 # doesn't have to update the bar
@@ -229,7 +229,7 @@ def download_files(total_size: int, install_path: str, side: Side, manifest: Man
                 skipped_files += 1
 
                 # Inform it's already installed
-                bar.update(size)
+                bar.update(fsize)
                 bar.set_desc(parse.unquote(path.basename(fname)) +
                              " is already installed, skipping...")
 
