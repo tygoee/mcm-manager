@@ -21,30 +21,29 @@ from urllib import parse, request, error
 from .headers import headers
 from .urls import media_url
 from .loadingbar import loadingbar
+from .modloaders import inst_modloader, MINECRAFT_DIR
+from .filesize import size, alternative
 
-from ._types import Media, Manifest, MediaList, Side
+from ._types import Manifest, URLMedia, Media, MediaList, Side
 
 
 class prepare:
-    def __new__(cls, install_path: str, side: Side, manifest: Manifest) -> int:
+    def __init__(self, install_path: str, side: Side, manifest: Manifest) -> None:
         "Get the file size and check media validity while listing all media"
 
         # Define the class variables
-        cls.install_path = install_path
-        cls.side: Side = side
+        self.install_path = install_path
+        self.side: Side = side
 
         # Prepare the media
-        total_size = 0
+        self.total_size = 0
 
         for media_type, media_list in {
             'mod': manifest.get('mods', []),
             'resourcepack': manifest.get('resourcepacks', []),
             'shaderpack': manifest.get('shaderpacks', [])
         }.items():
-            total_size += cls.prepare_media(media_type, media_list)
-
-        # At the end, return the total mods size
-        return total_size
+            self._prepare_media(media_type, media_list)
 
     @classmethod
     def load_manifest(cls, filename: str) -> Manifest:
@@ -66,8 +65,7 @@ class prepare:
 
         return manifest
 
-    @classmethod
-    def check_media_validity(cls, media_list: MediaList, media_type: str) -> None:
+    def _check_media_validity(self, media_list: MediaList, media_type: str) -> None:
         "Check for the modpack file validity"
         for media in media_list:
             for key in ['type', 'slug', 'name']:
@@ -86,8 +84,7 @@ class prepare:
             if 'sides' not in media.keys():
                 media['sides'] = sides
 
-    @classmethod
-    def get_headers(cls, media: Media, url: str) -> int:
+    def _get_headers(self, media: Media, url: str) -> None:
         "Recieve the content-length headers"
         try:
             size = int(request.urlopen(
@@ -101,54 +98,47 @@ class prepare:
             except error.HTTPError as e:
                 print(f"! WARNING: Could not download {media['name']}: \n{e}")
 
-                return 0
+                return
         except error.URLError as e:
             if e.reason.__str__() in ("[Errno -2] Name or service not known", "[Errno 11001] getaddrinfo failed"):
                 print(f"! WARNING: The mod {media['name']}" +
                       f"was not found: {e.reason}")
-                return 0
+                return
             else:
                 raise e
 
-        # Add the size to the tuple
+        # Add the size to the tuple and the total size
         if '_dl' in media:
             media['_dl'] = media['_dl'][:-1] + (size,)
 
-        return size
+        self.total_size += size
 
-    @classmethod
-    def prepare_media(cls, media_type: str, media_list: MediaList) -> int:
+    def _prepare_media(self, media_type: str, media_list: MediaList) -> None:
         if len(media_list) == 0:
-            return 0
+            return
 
-        cls.check_media_validity(media_list, media_type)
+        self._check_media_validity(media_list, media_type)
 
         # List the installed media and prepare the modpack
         print(f"\n{media_type.capitalize()}s: ")
 
-        size = 0
-        for media in (media for media in media_list if cls.side in media['sides']):
+        for media in (media for media in media_list if self.side in media['sides']):
             # Add the corresponding download info to media['_dl']
             url = media_url(media)
 
             dl_path = path.join(
-                cls.install_path,
+                self.install_path,
                 media_type + 's',
                 parse.unquote(media['name'])
             )
 
-            media['_dl'] = (
-                url, dl_path, 0
-            )
+            media['_dl'] = (url, dl_path, 0)
 
-            # Append the media size to the total size and save it in media['_dl']
-            size += cls.get_headers(media, url)
+            # Get the headers for appending the total size
+            self._get_headers(media, url)
 
             # Print the media name
             print(f"  {media['slug']} ({parse.unquote(media['name'])})")
-
-        # At the end, return the total media size
-        return size
 
 
 def download_file(url: str, fname: str, bar: loadingbar[int]):
@@ -187,7 +177,14 @@ def download_file(url: str, fname: str, bar: loadingbar[int]):
 
 
 def download_files(total_size: int, install_path: str, side: Side, manifest: Manifest) -> None:
-    "Download all files using a tqdm loading bar"
+    """
+    Download all files with a loading bar
+
+    :param total_size: The total size of all media
+    :param install_path: The path it's going to be installed to
+    :param side: The side; `'client'` or `'server'`
+    :param manifest: The manifest data from `prepare.load_manifest()`
+    """
 
     mods: MediaList = manifest.get('mods', [])
     resourcepacks: MediaList = manifest.get('resourcepacks', [])
@@ -222,7 +219,7 @@ def download_files(total_size: int, install_path: str, side: Side, manifest: Man
         disappear=True
     ) as bar:
         bar: loadingbar[int]  # The only way it worked out
-        for url, fname, size, sides in iterator:
+        for url, fname, fsize, sides in iterator:
             if side not in sides:
                 # As the size isn't calculated, it
                 # doesn't have to update the bar
@@ -232,7 +229,7 @@ def download_files(total_size: int, install_path: str, side: Side, manifest: Man
                 skipped_files += 1
 
                 # Inform it's already installed
-                bar.update(size)
+                bar.update(fsize)
                 bar.set_desc(parse.unquote(path.basename(fname)) +
                              " is already installed, skipping...")
 
@@ -254,3 +251,80 @@ def download_files(total_size: int, install_path: str, side: Side, manifest: Man
         "files that were already installed" if skipped_files != 0 else '',
         sep=''
     )
+
+
+def install(
+    manifest_file: str,
+    install_path: str = path.join(path.join(path.dirname(
+        path.realpath(__file__)), '..'), 'share', '.minecraft'),
+    side: Side = 'client',
+    install_modloader: bool = True,
+    launcher_path: str = MINECRAFT_DIR,
+    confirm: bool = True
+) -> None:
+    """
+    Install a list of mods, resourcepacks, shaderpacks and config files. Arguments:
+
+    :param manifest_file: This should be a path to a manifest file. \
+                          For the file structure, look at the README
+    :param install_path: The base path everything should be installed to
+    :param side: `'client'` or `'server'`: The side to be installed
+    :param inst_modloader: If you want to install the modloader
+    :param launcher_path: The path of your launcher directory
+    :param confirm: If the user should confirm the download
+    """
+
+    # Import the manifest file
+    manifest = prepare.load_manifest(manifest_file)
+
+    # List the modpack info
+    modpack_version: str = manifest['minecraft']['version']
+    modloader: str = manifest['minecraft']['modloader'].split(
+        '-', maxsplit=1)[0]
+    modloader_version: str = manifest['minecraft']['modloader'].split(
+        '-', maxsplit=1)[1]
+
+    print(f"Modpack version: {modpack_version}\n" +
+          f"Mod loader: {modloader}\n"
+          f"Mod loader version: {modloader_version}")
+
+    mods: MediaList = manifest.get('mods', [])
+    resourcepacks: MediaList = manifest.get('resourcepacks', [])
+    shaderpacks: MediaList = manifest.get('shaderpacks', [])
+
+    total_size = prepare(install_path, side, manifest).total_size
+
+    # Give warnings for external sources
+    external_media: list[URLMedia] = [_media for _media in [mod for mod in mods] +
+                                      [resourcepack for resourcepack in resourcepacks] +
+                                      [shaderpack for shaderpack in shaderpacks]
+                                      if _media['type'] == 'url']
+    if len(external_media) != 0:
+        print("\nWARNING! Some mods/resourcepacks/shaderpacks are from"
+              " external sources and could harm your system:")
+        for _media in external_media:
+            print(f"  {_media['slug']} ({_media['name']}): {_media['url']}")
+
+    # Print the mod info
+    print(
+        f"\n{len(mods)} mods, {len(resourcepacks)} recourcepacks, {len(shaderpacks)} shaderpacks\n"
+        f"Total file size: {size(total_size, system=alternative)}"
+    )
+
+    # Ask for confirmation if confirm is True and install all modpacks
+    if confirm:
+        try:
+            if input("Continue? (Y/n) ").lower() not in ['y', '']:
+                print("Cancelling...\n")
+                exit()
+        except KeyboardInterrupt:
+            print(end='\n')
+            exit(130)
+
+    # Download and install the modloader
+    if install_modloader:
+        inst_modloader(modloader, modpack_version, modloader_version,
+                       side, install_path, launcher_path)
+
+    # Download all files
+    download_files(total_size, install_path, side, manifest)

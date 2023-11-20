@@ -89,6 +89,9 @@ class Manifest(TypedDict):
 
 
 # --- modloaders.py --- #
+Modloader = Literal['forge', 'fabric'] | str
+
+
 class _OSDict(TypedDict):
     name: Literal["windows", "linux", "osx"]  # NotRequired
     arch: NotRequired[Literal["x86"]]
@@ -110,6 +113,8 @@ class _Rules(TypedDict):
 
 class OSLibrary(Library, _Rules):
     "All libraries of the media for a specific os"
+
+    ...
 
 
 Libraries = dict[str, Library | OSLibrary]

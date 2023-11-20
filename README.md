@@ -8,18 +8,24 @@ Minecraft modpack manager - This solves the problem of having to install mods ma
 
 ## "Building" to a `.pyz` file
 
-To make a `.pyz` file, you need to zip the entirety of `src/`, rename it extension to `mcm-manager.pyz` and run:
+How to make a `.pyz` file:
 
-Unix/Linux:
+1. Clone the git repository (don't cd into it)
+
+```shell
+git clone https://github.com/tygoee/mcm_manager.git
+```
+
+2. Using python `zipapp`, make a pyz file
+
+```shell
+python3 -m zipapp mcm_manager/ -m src.runner:main
+```
+
+To run it
 
 ```shell
 python3 mcm-manager.pyz
-```
-
-Windows:
-
-```shell
-python mcm-manager.pyz
 ```
 
 To make it an app always accessible from the command line in Unix/Linux, add the [shebang](<https://en.wikipedia.org/wiki/Shebang_(Unix)>) `#!/usr/bin/python3` at the start of the `.pyz` file and copy it to `~/.local/bin/`.
@@ -51,7 +57,7 @@ To get the rest of the information, go to downloads → the file → right click
   ├ `media` texture  
   └ `name` unique-spawn-eggs-v1-5.zip
 
-Make sure 'name' is ascii encoded, for example `%20` instead of a space
+Make sure 'name' is url encoded, for example `%20` instead of a space
 
 ## File structure
 
