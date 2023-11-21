@@ -17,65 +17,70 @@
 from os import path
 
 
-def maven_parse(arg: str) -> tuple[str, str]:
-    """
-    Parse java maven coords to a folder and a file.
+class maven_parse:
+    def __init__(self, arg: str) -> None:
+        """
+        Parse java maven coords to a folder and a file.
 
-    Example:
-    ```txt
-    de.oceanlabs.mcp:mcp_config:1.20.1-20230612.114412@zip
-    - folder: de/oceanlabs/mcp/mcp_config/1.20.1-20230612.114412/
-    - file: mcp_config-1.20.1-20230612.114412.zip
-    ```
-    maven_"""
+        Example:
+        ```txt
+        de.oceanlabs.mcp:mcp_config:1.20.1-20230612.114412@zip
+        - folder: de/oceanlabs/mcp/mcp_config/1.20.1-20230612.114412/
+        - file: mcp_config-1.20.1-20230612.114412.zip
+        ```
 
-    # Split the file extension
-    if '@' in arg:
-        arg, ext = arg.split('@', 1)
-    else:
-        ext = 'jar'
+        You can get a file path using `.maven_to_file()`
+        or an url using `.maven_to_url`
+        """
 
-    # Until the third colon, replace
-    # ':' with path.sep. Until the
-    # first, also replace '.' with it
-    colons = 0
-    folder = ''
-    for char in arg:
-        if colons == 3:
-            folder += path.sep
-            break
-        if char == ':':
-            colons += 1
-            char = path.sep
-        elif char == '.' and colons == 0:
-            char = path.sep
-        folder += char
+        self.parsed = self._parse(arg)
 
-    # Select everything from the first
-    # colon and replace ':' with '-'
-    file = ''
-    for char in arg[arg.find(':')+1:]:
-        if char == ':':
-            char = '-'
-        file += char
+    def _parse(self, arg: str) -> tuple[str, str]:
+        # Split the file extension
+        if '@' in arg:
+            arg, ext = arg.split('@', 1)
+        else:
+            ext = 'jar'
 
-    # Add the file extension
-    file += '.' + ext
+        # Until the third colon, replace
+        # ':' with path.sep. Until the
+        # first, also replace '.' with it
+        colons = 0
+        folder = ''
+        for char in arg:
+            if colons == 3:
+                folder += path.sep
+                break
+            if char == ':':
+                colons += 1
+                char = path.sep
+            elif char == '.' and colons == 0:
+                char = path.sep
+            folder += char
 
-    return folder, file
+        # Select everything from the first
+        # colon and replace ':' with '-'
+        file = ''
+        for char in arg[arg.find(':')+1:]:
+            if char == ':':
+                char = '-'
+            file += char
 
+        # Add the file extension
+        file += '.' + ext
 
-def maven_to_file(*paths: str) -> str:
-    """
-    Create a file path from a maven coord.
-    The last argument should be `arg`
-    """
-    return path.join(*paths[:-1], *maven_parse(paths[-1]))
+        return folder, file
 
+    def to_file(self, *paths: str) -> str:
+        """
+        Create a file path from the maven coord. This calls
+        a `path.join()` with all paths plus `self.parsed`
+        """
+        return path.join(*paths, *self.parsed)
 
-def maven_to_url(base: str, arg: str) -> str:
-    """Create a url from a maven coord"""
-    if not base[-1] == '/':
-        base += '/'
+    def to_url(self, base: str) -> str:
+        """Create a url from the maven coord"""
+        if not base[-1] == '/':
+            base += '/'
 
-    return ''.join((base, *maven_parse(arg)))
+        return ''.join((base, *self.parsed))

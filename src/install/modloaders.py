@@ -27,7 +27,7 @@ from zipfile import ZipFile
 from .urls import forge as forge_urls, fabric as fabric_urls
 from .loadingbar import loadingbar
 
-from ..common.maven_coords import maven_to_file
+from ..common.maven_coords import maven_parse
 
 from ._types import (
     Client, Server, Side, Modloader,
@@ -185,7 +185,7 @@ class forge:
         arg = arg[1:-1]
 
         # Return the full path
-        return maven_to_file(self.launcher_dir, 'libraries', arg)
+        return maven_parse(arg).to_file(self.launcher_dir, 'libraries')
 
     def download_jar_files(self) -> None:
         """Download the jar files"""
