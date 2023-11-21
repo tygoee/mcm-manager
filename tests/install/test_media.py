@@ -15,48 +15,56 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import unittest
-from ..vars import quiet, empty_dir, current_dir, install_dir
+from ..config import CURDIR, INSTDIR
+from ..globalfuncs import cleanup, quiet
+from .setup import setup_dirs
 
 from src.install.media import prepare, download_files
 from os import path
 
-unittest.TestLoader.sortTestMethodsUsing = None  # type: ignore
-manifest_file = path.join(current_dir, 'assets', 'manifest.json')
+manifest_file = path.join(CURDIR, 'assets', 'manifest.json')
 
 
 class Install(unittest.TestCase):
     # These tests need some serious improvement
     def test_media(self):
-        self._test_prepare()
-        self._test_download()
+        # Create the manifest
+        self.manifest = prepare.load_manifest(manifest_file)
+
+        # Run all sub tests in order
+        self._test_prepare_client()
+        self._test_prepare_server()
+        self._test_download_client()
+        self._test_download_server()
 
     @quiet
-    def _test_prepare(self):
-        manifest = prepare.load_manifest(manifest_file)
-
-        empty_dir(install_dir)
+    @cleanup
+    def _test_prepare_client(self):
+        setup_dirs()
         self.total_size_client = prepare(
-            install_dir, 'client', manifest).total_size
+            INSTDIR, 'client', self.manifest).total_size
 
         self.assertIsInstance(self.total_size_client, int)
 
-        empty_dir(install_dir)
+    @quiet
+    @cleanup
+    def _test_prepare_server(self):
+        setup_dirs()
         self.total_size_server = prepare(
-            install_dir, 'server', manifest).total_size
+            INSTDIR, 'server', self.manifest).total_size
 
         self.assertIsInstance(self.total_size_server, int)
 
     @quiet
-    def _test_download(self):
-        manifest = prepare.load_manifest(manifest_file)
-
-        empty_dir(install_dir)
+    @cleanup
+    def _test_download_client(self):
+        setup_dirs()
         download_files(self.total_size_client,
-                       install_dir, 'client', manifest)
+                       INSTDIR, 'client', self.manifest)
 
-        empty_dir(install_dir)
+    @quiet
+    @cleanup
+    def _test_download_server(self):
+        setup_dirs()
         download_files(self.total_size_server,
-                       install_dir, 'server', manifest)
-
-    def tearDown(self):
-        empty_dir(install_dir)
+                       INSTDIR, 'server', self.manifest)
