@@ -30,7 +30,10 @@ class maven_parse:
         ```
 
         You can get a file path using `.maven_to_file()`
-        or an url using `.maven_to_url`
+        or an url using `.maven_to_url`.
+
+        To directly access the parsed result,
+        use the variable `.parsed`
         """
 
         self.parsed = self._parse(arg)
