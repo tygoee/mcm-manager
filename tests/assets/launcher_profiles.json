@@ -1,0 +1,17 @@
+{
+    "profiles": {},
+    "settings": {
+        "crashAssistance": true,
+        "enableAdvanced": false,
+        "enableAnalytics": true,
+        "enableHistorical": false,
+        "enableReleases": true,
+        "enableSnapshots": false,
+        "keepLauncherOpen": false,
+        "profileSorting": "ByLastPlayed",
+        "showGameLog": false,
+        "showMenu": false,
+        "soundOn": false
+    },
+    "version": 3
+}

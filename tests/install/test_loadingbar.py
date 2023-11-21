@@ -15,13 +15,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import unittest
-from ..vars import quiet
+from ..globalfuncs import quiet
 
 from typing import Iterator
 from src.install.loadingbar import loadingbar
 
 
-class LoadingBar(unittest.TestCase):
+class Loadingbar(unittest.TestCase):
     @quiet
     def test_bar(self):
         # Iterating

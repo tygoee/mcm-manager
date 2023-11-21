@@ -15,11 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import unittest
+
 from src.install.urls import media_url, forge
 from src.install._types import Media
 
 
-class Install(unittest.TestCase):
+class Urls(unittest.TestCase):
     def test_urls(self):
         # Define different media types
         cf_media: Media = {
@@ -62,7 +63,8 @@ class Install(unittest.TestCase):
             "info": {
                 "title": "Essential",
                 "icon": "https://static.essential.gg/icon/256x256.png",
-                "description": "Essential is a quality of life mod that boosts Minecraft Java to the next level."
+                "description": "Essential is a quality of life mod that "
+                               "boosts Minecraft Java to the next level."
             },
             "sides": [
                 "client",
@@ -72,10 +74,11 @@ class Install(unittest.TestCase):
 
         # Test if they assert equal
         cases = {
-            media_url(cf_media): 'https://mediafilez.forgecdn.net/files/4586/218/worldedit-mod-7.2.15.jar',
-            media_url(pm_media): 'https://static.planetminecraft.com/files/resource_media/texture/unique-spawn-eggs-v1-5.zip',
-            media_url(mr_media): 'https://cdn-raw.modrinth.com/data/AANobbMI/versions/' +
-                                 'OkwCNtFH/sodium-fabric-mc1.20.1-0.5.1.jar',
+            media_url(cf_media): "https://mediafilez.forgecdn.net/files/4586/218/worldedit-mod-7.2.15.jar",
+            media_url(pm_media): "https://static.planetminecraft.com/files/resource_media/"
+                                 "texture/unique-spawn-eggs-v1-5.zip",
+            media_url(mr_media): "https://cdn-raw.modrinth.com/data/AANobbMI/versions/"
+                                 "OkwCNtFH/sodium-fabric-mc1.20.1-0.5.1.jar",
             media_url(url_media): url_media['url']
         }
 
@@ -90,5 +93,6 @@ class Install(unittest.TestCase):
 
         self.assertEqual(
             forge.forge_installer_url('1.20.1', '47.1.0'),
-            "https://maven.minecraftforge.net/net/minecraftforge/forge/1.20.1-47.1.0/forge-1.20.1-47.1.0-installer.jar"
+            "https://maven.minecraftforge.net/net/minecraftforge/forge/"
+            "1.20.1-47.1.0/forge-1.20.1-47.1.0-installer.jar"
         )

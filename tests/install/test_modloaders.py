@@ -15,33 +15,36 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import unittest
-from ..vars import quiet, empty_dir, install_dir, launcher_dir
+from ..config import INSTDIR, LAUNDIR
+from ..globalfuncs import cleanup, quiet
+from .setup import setup_dirs
 
 from src.install.modloaders import forge, fabric
 
 
-class Install(unittest.TestCase):
+class Modloaders(unittest.TestCase):
     @quiet
+    @cleanup
     def test_forge_client(self):
-        empty_dir(install_dir)
-        forge('1.20.1', '47.1.0', 'client', install_dir, launcher_dir)
+        setup_dirs()
+        forge('1.20.1', '47.1.0', 'client', INSTDIR, LAUNDIR)
 
     @quiet
+    @cleanup
     def test_forge_server(self):
-        empty_dir(install_dir)
-        forge('1.20.1', '47.1.0', 'server', install_dir)
-
-    def tearDown(self):
-        empty_dir(install_dir, launcher_dir)
+        setup_dirs()
+        forge('1.20.1', '47.1.0', 'server', INSTDIR)
 
 
 if False:  # Tests of unfinished features
     @quiet
+    @cleanup
     def test_fabric_client(self):
-        empty_dir(install_dir)
-        fabric('1.20.1', '0.14.22', 'client', install_dir)
+        setup_dirs()
+        fabric('1.20.1', '0.14.22', 'client', INSTDIR)
 
     @quiet
+    @cleanup
     def test_fabric_server(self):
-        empty_dir(install_dir)
-        fabric('1.20.1', '0.14.22', 'server', install_dir)
+        setup_dirs()
+        fabric('1.20.1', '0.14.22', 'server', INSTDIR)

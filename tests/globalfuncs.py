@@ -15,9 +15,20 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from contextlib import redirect_stdout
-from typing import Callable, Any
-from os import path, walk, remove
+from typing import Any, Callable
+from os import path, remove, walk
 from shutil import rmtree
+
+from .config import TMPDIR
+
+
+def empty_dir(directory: str):
+    "Empty a directory"
+    for root, dirs, files in walk(directory):
+        for f in files:
+            remove(path.join(root, f))
+        for d in dirs:
+            rmtree(path.join(root, d))
 
 
 def quiet(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -29,19 +40,9 @@ def quiet(func: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-def empty_dir(*directories: str):
-    for directory in directories:
-        for root, dirs, files in walk(directory):
-            for f in files:
-                remove(path.join(root, f))
-            for d in dirs:
-                rmtree(path.join(root, d))
-
-
-launcher_dir = path.realpath(
-    path.join(path.dirname(path.realpath(__file__)), '.minecraft'))
-
-install_dir = path.realpath(path.join(path.dirname(
-    path.realpath(__file__)), 'gamedir'))
-
-current_dir = path.dirname(path.realpath(__file__))
+def cleanup(func: Callable[..., Any]) -> Callable[..., Any]:
+    "A function that removes the temp directory after completion"
+    def wrapper(*args: Any, **kwargs: Any):
+        func(*args, **kwargs)
+        empty_dir(TMPDIR)
+    return wrapper

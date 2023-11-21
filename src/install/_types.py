@@ -19,11 +19,11 @@ from typing import (
     Generic, NotRequired, Optional
 )
 
-# --- install/filesize.py --- #
+# --- filesize.py --- #
 SizeSystem = list[tuple[int, str | tuple[str, str]]]
 
 
-# --- install --- #
+# --- common --- #
 Client = Literal['client']
 Server = Literal['server']
 Side = Literal['client', 'server']
