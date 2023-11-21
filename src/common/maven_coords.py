@@ -49,7 +49,6 @@ class maven_parse:
         folder = ''
         for char in arg:
             if colons == 3:
-                folder += path.sep
                 break
             if char == ':':
                 colons += 1
@@ -57,6 +56,9 @@ class maven_parse:
             elif char == '.' and colons == 0:
                 char = path.sep
             folder += char
+
+        if not folder[-1] == '/':
+            folder += '/'
 
         # Select everything from the first
         # colon and replace ':' with '-'
