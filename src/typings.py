@@ -215,7 +215,7 @@ class _ForgeLibrary(TypedDict):
     rules: NotRequired[list[_Rules]]
 
 
-class ForgeMinecraftJson(_JavaJson[_ForgeLibrary]):
+class MinecraftJson(_JavaJson[_ForgeLibrary]):
     "Minecraft version_manifest.json file"
     assetIndex: _AssetIndex
     assets: str
