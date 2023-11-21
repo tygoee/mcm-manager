@@ -20,7 +20,7 @@ from src.install.urls import media_url, forge
 from src.install._types import Media
 
 
-class Install(unittest.TestCase):
+class Urls(unittest.TestCase):
     def test_urls(self):
         # Define different media types
         cf_media: Media = {

@@ -25,7 +25,7 @@ from os import path
 manifest_file = path.join(CURDIR, 'assets', 'manifest.json')
 
 
-class Install(unittest.TestCase):
+class Media(unittest.TestCase):
     # These tests need some serious improvement
     def test_media(self):
         # Create the manifest

@@ -22,7 +22,7 @@ from .setup import setup_dirs
 from src.install.modloaders import forge, fabric
 
 
-class Install(unittest.TestCase):
+class Modloaders(unittest.TestCase):
     @quiet
     @cleanup
     def test_forge_client(self):

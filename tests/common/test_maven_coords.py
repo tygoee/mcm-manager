@@ -3,7 +3,7 @@ import unittest
 from src.common.maven_coords import maven_parse
 
 
-class Common(unittest.TestCase):
+class MavenParse(unittest.TestCase):
     def test_maven_coords(self):
         cases: list[tuple[str, tuple[str, str], str, str]] = [
             (  # With three parts

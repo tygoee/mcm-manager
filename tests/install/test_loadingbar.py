@@ -21,7 +21,7 @@ from typing import Iterator
 from src.install.loadingbar import loadingbar
 
 
-class LoadingBar(unittest.TestCase):
+class Loadingbar(unittest.TestCase):
     @quiet
     def test_bar(self):
         # Iterating
