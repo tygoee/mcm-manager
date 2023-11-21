@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from atexit import register
+from http.client import HTTPResponse
 from json import load, loads, dump
 from os import path, getenv, mkdir, rename
 from shutil import rmtree, copyfile
@@ -24,16 +25,16 @@ from typing import overload
 from urllib import request
 from zipfile import ZipFile
 
-from .urls import forge as forge_urls, fabric as fabric_urls
 from .loadingbar import loadingbar
+from .urls import forge as forge_urls
 
 from ..common.maven_coords import maven_parse
 
-from ._types import (
+from ..typings import (
     Client, Server, Side, Modloader,
-    MinecraftJson, VersionJson,
+    ForgeLibrary, ForgeVersionJson,
     InstallProfile, Libraries,
-    Library, OSLibrary
+    MinecraftJson, OSLibrary
 )
 
 # Define the minecraft directory
@@ -105,13 +106,14 @@ class forge:
                 "Please make sure you have Java installed and it is properly configured."
             )
 
-        self.minecraft_json: MinecraftJson = loads(request.urlopen(
-            [item for item in loads(
-                request.urlopen(
-                    forge_urls.version_manifest_v2
-                ).read().decode('utf-8')
-            )['versions'] if item['id'] == mc_version][0]['url']
-        ).read().decode('utf-8'))
+        v_man_v2: HTTPResponse = request.urlopen(
+            forge_urls.version_manifest_v2)
+
+        for item in loads(v_man_v2.read().decode('utf-8'))['versions']:
+            if item['id'] == mc_version:
+                _res: HTTPResponse = request.urlopen(item['url'])
+                self.minecraft_json: MinecraftJson = loads(
+                    _res.read().decode('utf-8'))
 
         # Exit if the launcher hasn't launched once
         if not path.isfile(path.join(launcher_dir, 'launcher_profiles.json')) and side == 'client':
@@ -127,7 +129,7 @@ class forge:
             with archive.open('install_profile.json') as fp:
                 self.install_profile: InstallProfile = load(fp)
             with archive.open('version.json') as fp:
-                self.version_json: VersionJson = load(fp)
+                self.version_json: ForgeVersionJson = load(fp)
 
             # Define the forge dir
             forge_dir = path.join(
@@ -203,8 +205,10 @@ class forge:
 
         if self.side == 'client':
             # Make the required directories
-            for directory in [path.join(self.launcher_dir, 'versions'),
-                              path.join(self.launcher_dir, 'versions', self.mc_version)]:
+            for directory in [
+                    path.join(self.launcher_dir, 'versions'),
+                    path.join(self.launcher_dir, 'versions', self.mc_version)
+            ]:
                 if not path.isdir(directory):
                     mkdir(directory)
 
@@ -227,7 +231,7 @@ class forge:
                         break
                     mod_file.write(resp_data)
 
-    def download_library(self, bar: loadingbar[Library | OSLibrary], library: Library) -> None:
+    def download_library(self, bar: loadingbar[ForgeLibrary | OSLibrary], library: ForgeLibrary) -> None:
         """Download a library"""
         # Define the java os names
         osdict = {
@@ -381,36 +385,6 @@ class forge:
 
             # Refresh the loading bar
             bar.refresh()
-
-
-class fabric:
-    "I accidentally uploaded this, it's unfinished"
-
-    def __init__(self, mc_version: str,
-                 fabric_version: str,
-                 side: Side,
-                 install_dir: str = MINECRAFT_DIR,
-                 launcher_dir: str = MINECRAFT_DIR) -> None:
-
-        self.mc_version = mc_version
-
-        # Define the class variables
-        launcher_dir = install_dir if side == 'server' else launcher_dir
-
-        self.mc_version = mc_version
-        self.fabric_version = fabric_version
-        self.side = side
-        self.install_dir = install_dir
-        self.launcher_dir = launcher_dir
-
-        self.install_version()
-
-    def install_version(self):
-        print(request.urlopen(fabric_urls.api_url(
-            'v2', 'versions', 'loader',
-            self.mc_version, self.fabric_version,
-            'server', 'json'
-        )).read().decode('utf-8'))
 
 
 def inst_modloader(

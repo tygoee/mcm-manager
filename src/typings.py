@@ -19,11 +19,15 @@ from typing import (
     Generic, NotRequired, Optional
 )
 
-# --- filesize.py --- #
+# ============================ #
+#      install/filesize.py     #
+# ============================ #
 SizeSystem = list[tuple[int, str | tuple[str, str]]]
 
 
-# --- common --- #
+# ============================ #
+#            install/          #
+# ============================ #
 Client = Literal['client']
 Server = Literal['server']
 Side = Literal['client', 'server']
@@ -31,12 +35,12 @@ Side = Literal['client', 'server']
 _T = TypeVar("_T", bound=Literal['cf', 'pm', 'mr', 'url'])
 
 
-class Minecraft(TypedDict):
+class _Minecraft(TypedDict):
     version: str
     modloader: str
 
 
-class Info(TypedDict, total=False):
+class _Info(TypedDict, total=False):
     "Dictionary with info about media"
     title: str
     icon: str
@@ -49,7 +53,7 @@ class _Media(Generic[_T], TypedDict):
     slug: str
     name: str
     sides: list[Literal['client', 'server']]
-    info: NotRequired[Info]
+    info: NotRequired[_Info]
 
     # Download info: url, path, size
     _dl: NotRequired[tuple[str, str, int]]
@@ -82,23 +86,30 @@ MediaList = list[Media]
 
 class Manifest(TypedDict):
     "All information of the modpack"
-    minecraft: Minecraft
+    minecraft: _Minecraft
     mods: MediaList
     resourcepacks: MediaList
     shaderpacks: MediaList
 
 
-# --- modloaders.py --- #
+# ============================ #
+#     install/modloaders.py    #
+# ============================ #
 Modloader = Literal['forge', 'fabric'] | str
 
+# ========= #
+#   Forge   #
+# ========= #
 
+
+# Libraries
 class _OSDict(TypedDict):
     name: Literal["windows", "linux", "osx"]  # NotRequired
     arch: NotRequired[Literal["x86"]]
 
 
-class Library(TypedDict):
-    "All libraries of the media"
+class ForgeLibrary(TypedDict):
+    "A forge library"
     path: str
     sha1: str
     size: int
@@ -111,15 +122,15 @@ class _Rules(TypedDict):
     os: _OSDict  # NotRequired
 
 
-class OSLibrary(Library, _Rules):
-    "All libraries of the media for a specific os"
-
+class OSLibrary(ForgeLibrary, _Rules):
+    "A library for a specific OS"
     ...
 
 
-Libraries = dict[str, Library | OSLibrary]
+Libraries = dict[str, ForgeLibrary | OSLibrary]
 
 
+# Forge minecraft and version json
 class _Arg(TypedDict):
     rules: list[_Rules]
     value: str | list[str]
@@ -167,12 +178,6 @@ class _Download(TypedDict):
     artifact: _Artifact
 
 
-class _JavaLibrary(TypedDict):
-    downloads: _Download
-    name: str
-    rules: NotRequired[list[_Rules]]
-
-
 class _File(TypedDict):
     id: str
     sha1: str
@@ -190,10 +195,13 @@ class _Logging(TypedDict):
     client: _LoggingClient
 
 
-class JavaJson(TypedDict):
+_L = TypeVar('_L')
+
+
+class _JavaJson(TypedDict, Generic[_L]):
     arguments: _Arguments
     id: str
-    libraries: list[_JavaLibrary]
+    libraries: list[_L]
     logging: _Logging
     mainClass: str
     releaseTime: str
@@ -201,7 +209,13 @@ class JavaJson(TypedDict):
     type: str
 
 
-class MinecraftJson(JavaJson):
+class _ForgeLibrary(TypedDict):
+    downloads: _Download
+    name: str
+    rules: NotRequired[list[_Rules]]
+
+
+class ForgeMinecraftJson(_JavaJson[_ForgeLibrary]):
     "Minecraft version_manifest.json file"
     assetIndex: _AssetIndex
     assets: str
@@ -211,12 +225,12 @@ class MinecraftJson(JavaJson):
     minimumLauncherVersion: int
 
 
-class VersionJson(JavaJson):
-    "Minecraft version.json file"
+class ForgeVersionJson(_JavaJson[_ForgeLibrary]):
+    "Forge's minecraft version.json file"
     inheritsFrom: str
 
 
-# -- Install profile -- #
+# Install profile
 class _Data(TypedDict):
     client: str
     server: str
@@ -238,9 +252,71 @@ class InstallProfile(TypedDict):
     serverJarPath: str
     data: dict[str, _Data]
     processors: list[_Processor]
-    libraries: list[_JavaLibrary]
+    libraries: list[_ForgeLibrary]
     icon: str
     json: str
     logo: str
     mirrorList: str
     welcome: str
+
+
+# ========== #
+#   Fabric   #
+# ========== #
+
+# Loader
+class _Loader(TypedDict):
+    seperator: str
+    build: int
+    maven: str
+    version: str
+    stable: bool
+
+
+class _Intermediary(TypedDict):
+    maven: str
+    version: str
+    stable: bool
+
+
+class _FabricLibrary(TypedDict):
+    name: str
+    url: str
+
+
+class _FabricLibraries(TypedDict):
+    client: list[_FabricLibrary]
+    common: list[_FabricLibrary]
+    server: list[_FabricLibrary]
+
+
+class _MainClass(TypedDict):
+    client: str
+    server: str
+
+
+class _LauncherMeta(TypedDict):
+    version: int
+    libraries: _FabricLibraries
+    mainClass: _MainClass
+
+
+class LoaderJson(TypedDict):
+    "Information about the fabric loader"
+    loader: _Loader
+    intermediary: _Intermediary
+    launcherMeta: _LauncherMeta
+
+
+class FabricLibrary(_FabricLibrary):
+    "A fabric library"
+    file: str
+
+
+LibraryList = list[FabricLibrary]
+
+
+# Fabric version json
+class FabricVersionJson(_JavaJson[_FabricLibrary]):
+    "Fabric's minecraft version.json file"
+    inheritsFrom: str

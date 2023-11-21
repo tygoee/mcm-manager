@@ -17,7 +17,7 @@
 import unittest
 
 from src.install.urls import media_url, forge
-from src.install._types import Media
+from src.typings import Media
 
 
 class Urls(unittest.TestCase):

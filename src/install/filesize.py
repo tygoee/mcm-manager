@@ -8,7 +8,7 @@
 # Copyright (C) Martijn Faassen, Startifact
 # <https://pypi.org/project/hurry.filesize/>
 
-from ._types import SizeSystem
+from ..typings import SizeSystem
 
 traditional: SizeSystem = [
     (1024 ** 5, 'P'),

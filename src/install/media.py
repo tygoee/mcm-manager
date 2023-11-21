@@ -24,7 +24,7 @@ from .loadingbar import loadingbar
 from .modloaders import inst_modloader, MINECRAFT_DIR
 from .filesize import size, alternative
 
-from ._types import Manifest, URLMedia, Media, MediaList, Side
+from ..typings import Manifest, URLMedia, Media, MediaList, Side
 
 
 class prepare:
