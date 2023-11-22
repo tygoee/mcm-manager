@@ -15,8 +15,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from os import get_terminal_size
-from typing import Collection, Generic, Literal, TypeVar, Optional, overload, Type
-from types import TracebackType
+from typing import (
+    Collection, Generic, Literal, TypeVar,
+    Optional, overload, TYPE_CHECKING
+)
+
+if TYPE_CHECKING:
+    from types import TracebackType
 
 from .filesize import size, traditional
 
@@ -95,9 +100,6 @@ class loadingbar(Generic[_T]):
         :param disappear: If you want the bar to disappear
         """
 
-        # Define class variables
-        self._iter_type: Literal['iter', 'total', 'both']
-
         if iterator is not None and total == 0:
             # iter
             self.iterator = iterator
@@ -165,10 +167,14 @@ class loadingbar(Generic[_T]):
         if self.iterable is not None:
             self.item = next(self.iterable)
             self.idx += 1
-        elif type(self.total) == int and self.idx < self.total:  # total
-            self.idx += 1
         else:
-            raise StopIteration
+            if TYPE_CHECKING and type(self.total) != int:
+                raise TypeError
+
+            if self.idx < self.total:  # total
+                self.idx += 1
+            else:
+                raise StopIteration
 
         # Refresh the loading bar
         self.refresh()
@@ -184,9 +190,9 @@ class loadingbar(Generic[_T]):
 
         return self
 
-    def __exit__(self, exc_type: Optional[Type[BaseException]],
+    def __exit__(self, exc_type: Optional[type[BaseException]],
                  exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> bool:
+                 traceback: Optional['TracebackType']) -> bool:
         "Allow a with-as statement"
 
         return False  # No errors
@@ -195,7 +201,10 @@ class loadingbar(Generic[_T]):
         "Refresh the loading bar, called automatically"
 
         # Calculate progress
-        if type(self.total) == int and self.total != 0:  # both, total
+        if hasattr(self, 'total'):  # both, total
+            if TYPE_CHECKING and type(self.total) != int:
+                raise TypeError
+
             percent = round(self.idx / self.total * 100, 0)
         else:
             percent = round(self.idx / self.iterator_len * 100, 0)
@@ -206,12 +215,14 @@ class loadingbar(Generic[_T]):
         # Define the current and total
         if self.unit == 'it':
             current = str(self.idx)
-            total = str(self.total if self.total != 0 else self.iterator_len)
+            total = str(self.total if hasattr(
+                self, 'total') else self.iterator_len)
         else:
             current = size(self.idx, traditional)
-            if type(arg := self.total if self.total != 0
-                    else self.iterator_len) != int:
-                raise TypeError  # Shouldn't be able to happen
+            arg = self.total if hasattr(self, 'total') else self.iterator_len
+
+            if TYPE_CHECKING and type(arg) != int:
+                raise TypeError
 
             total = size(arg, traditional)
 
@@ -240,8 +251,7 @@ class loadingbar(Generic[_T]):
         ), end=end)
 
         # Clear the loading bar at the end
-        if self.idx == (self.total if self._iter_type in (
-                'both', 'total') else self.iterator_len):
+        if self.idx == (self.total if hasattr(self, 'total') else self.iterator_len):
             if self.disappear and self.show_desc:
                 print('\r\033[K\033[F\r\033[K', end='')
             elif self.disappear:
@@ -251,7 +261,7 @@ class loadingbar(Generic[_T]):
 
     def update(self, amount: int) -> None:
         "Add 'n' amount of iterations to the loading bar"
-        if self._iter_type == 'iter':
+        if not hasattr(self, 'total'):
             i = 0
 
             # Call next(self) while less than amount
