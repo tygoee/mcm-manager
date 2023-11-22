@@ -38,8 +38,6 @@ def media_url(media: Media) -> str:
 
 
 class forge:
-    version_manifest_v2 = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
-
     @staticmethod
     def forge_installer_url(mc_version: str, forge_version: str) -> str:
         return "https://maven.minecraftforge.net/net/minecraftforge/forge/" \

@@ -15,26 +15,29 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from atexit import register
-from http.client import HTTPResponse
-from json import load, loads, dump
-from os import path, getenv, mkdir, rename
+from json import load, dump
+from os import path, getenv, mkdir, makedirs, rename
 from shutil import rmtree, copyfile
 from subprocess import check_call, DEVNULL
 from sys import platform
-from typing import overload
+from typing import overload, TYPE_CHECKING
 from urllib import request
 from zipfile import ZipFile
+
+if TYPE_CHECKING:
+    from http.client import HTTPResponse
 
 from .loadingbar import loadingbar
 from .urls import forge as forge_urls
 
 from ..common.maven_coords import maven_parse
+from ..apis import fabric_meta, piston_meta
 
 from ..typings import (
     Client, Server, Side, Modloader,
-    ForgeLibrary, ForgeVersionJson,
+    ForgeLibrary, OSLibrary,
     InstallProfile, Libraries,
-    MinecraftJson, OSLibrary
+    ForgeVersionJson
 )
 
 # Define the minecraft directory
@@ -88,6 +91,7 @@ class forge:
         self.launcher_dir = launcher_dir
 
         self.temp_dir = path.join(launcher_dir, '.temp')
+        self.minecraft_json = piston_meta.get_minecraft_json(mc_version)
         self.installer = path.join(
             self.temp_dir, f'forge-{mc_version}-{forge_version}-installer.jar')
 
@@ -102,18 +106,9 @@ class forge:
             check_call(['java', '--version'], stdout=DEVNULL)
         except FileNotFoundError:
             raise FileNotFoundError(
-                "Java was not found in the system's PATH. " +
-                "Please make sure you have Java installed and it is properly configured."
+                "Java was not found in the system's PATH. Please make sure "
+                "you have Java installed and it is properly configured."
             )
-
-        v_man_v2: HTTPResponse = request.urlopen(
-            forge_urls.version_manifest_v2)
-
-        for item in loads(v_man_v2.read().decode('utf-8'))['versions']:
-            if item['id'] == mc_version:
-                _res: HTTPResponse = request.urlopen(item['url'])
-                self.minecraft_json: MinecraftJson = loads(
-                    _res.read().decode('utf-8'))
 
         # Exit if the launcher hasn't launched once
         if not path.isfile(path.join(launcher_dir, 'launcher_profiles.json')) and side == 'client':
@@ -213,8 +208,9 @@ class forge:
                     mkdir(directory)
 
             # Write the (version).json file
-            with open(path.join(self.launcher_dir, 'versions', self.mc_version, f"{self.mc_version}.json"), 'w') as fp:
-                dump(self.minecraft_json, fp)
+            with open(path.join(self.launcher_dir, 'versions', self.mc_version,
+                                f"{self.mc_version}.json"), 'w') as fp:
+                dump(self.minecraft_json, fp, indent=2)
 
         # Define the download urls
         downloads = {
@@ -224,6 +220,7 @@ class forge:
 
         # Download everything
         for fname, url in downloads.items():
+            resp: 'HTTPResponse'
             with request.urlopen(url) as resp, open(path.join(fname), 'wb') as mod_file:
                 while True:
                     resp_data = resp.read(1024)
@@ -388,7 +385,108 @@ class forge:
 
 
 class fabric:
-    pass
+    def __init__(self, mc_version: str,
+                 fabric_version: str,
+                 side: Side,
+                 install_dir: str = MINECRAFT_DIR,
+                 launcher_dir: str = MINECRAFT_DIR) -> None:
+
+        self.mc_version = mc_version
+
+        # Define the class variables
+        launcher_dir = install_dir if side == 'server' else launcher_dir
+
+        self.mc_version = mc_version
+        self.fabric_version = fabric_version
+        self.side: Side = side
+        self.install_dir = install_dir
+        self.launcher_dir = launcher_dir
+
+        self.temp_dir = path.join(launcher_dir, '.temp')
+
+        loader = fabric_meta.loader(mc_version, fabric_version)
+        self.version_json = loader.profile_json()
+        self.libraries = loader.libraries(launcher_dir)
+
+        # Exit if the launcher hasn't launched once
+        if not path.isfile(path.join(launcher_dir, 'launcher_profiles.json')) and side == 'client':
+            raise FileNotFoundError(
+                "Launch the launcher once before installing fabric.")
+
+        # Download the jar files
+        self.download_jar_files()
+
+        # Update version info
+        if side == 'client':
+            self.update_version_info()
+
+    def generate_server_files(self) -> None:
+        ...
+
+    def download_jar_files(self) -> None:
+        """Download the jar files"""
+
+        # Create the temp dir
+        if not path.isdir(self.temp_dir):
+            mkdir(self.temp_dir)
+        else:
+            rmtree(self.temp_dir)
+            mkdir(self.temp_dir)
+
+        # Delete the temp dir at exit
+        register(lambda: rmtree(self.temp_dir) if path.isdir(
+            self.temp_dir) else None)
+
+        # Download everything
+        for library in self.libraries:
+            # Make the appropiate directories
+            makedirs(path.dirname(library['file']), exist_ok=True)
+
+            # Download the resource
+            resp: 'HTTPResponse'
+            with (request.urlopen(library['url']) as resp,
+                  open(path.join(library['file']), 'wb') as mod_file):
+                while True:
+                    resp_data = resp.read(1024)
+                    if not resp_data:
+                        break
+                    mod_file.write(resp_data)
+
+    def update_version_info(self) -> None:
+        """Update version info and inject launcher profiles"""
+
+        # Create a versions directory
+        if not path.isdir(versions := path.join(
+                self.launcher_dir, 'versions')):
+            mkdir(versions)
+
+        # Add version json and dummy jar
+        with open(path.join(versions, self.version_json['id'] + '.json'), 'w') as fp:
+            dump(self.version_json, fp)
+
+        with open(path.join(versions, self.version_json['id'] + '.jar'), 'w'):
+            pass
+
+        # Inject launcher profiles
+        with open(path.join(self.launcher_dir, 'launcher_profiles.json'), 'r') as fp:
+            launcher_profiles = load(fp)
+
+        with open(path.join(self.launcher_dir, 'launcher_profiles.json'), 'w') as fp:
+            launcher_profiles['profiles'][f'fabric-loader-{self.mc_version}'] = {
+                "gameDir": path.abspath(self.install_dir),
+                "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACA"
+                        "BAMAAAAxEHz4AAAAGFBMVEUAAAA4NCrb0LTGvKW8spyAem2uppSakn"
+                        "5SsnMLAAAAAXRSTlMAQObYZgAAAJ5JREFUaIHt1MENgCAMRmFWYAVX"
+                        "cAVXcAVXcH3bhCYNkYjcKO8dSf7v1JASUWdZAlgb0PEmDSMAYYBdGk"
+                        "YApgf8ER3SbwRgesAf0BACMD1gB6S9IbkEEBfwY49oNj4lgLhA64C0"
+                        "o9R9RABTAvp4SX5kB2TA5y8EEAK4pRrxB9QcA4QBWkj3GCAMUCO/xw"
+                        "BhAI/kEsCagCHDY4AwAC3VA6t4zTAMj0OJAAAAAElFTkSuQmCC",
+                "lastUsed": "1970-01-02T00:00:00.000Z",
+                "lastVersionId": self.version_json['id'],
+                "name": f"fabric {self.mc_version}",
+                "type": "custom"
+            }
+            dump(launcher_profiles, fp, indent=2)
 
 
 def inst_modloader(

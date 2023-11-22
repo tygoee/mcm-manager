@@ -97,6 +97,37 @@ class Manifest(TypedDict):
 # ============================ #
 Modloader = Literal['forge', 'fabric'] | str
 
+
+class _Settings(TypedDict):
+    enableAnalytics: bool
+    enableAdvanced: bool
+    keepLauncherOpen: bool
+    soundOn: bool
+    showMenu: bool
+    enableSnapshots: bool
+    enableHistorical: bool
+    enableReleases: bool
+    profileSorting: str
+    showGameLog: bool
+    crashAssistance: bool
+
+
+class _Profile(TypedDict, total=False):
+    gameDir: str
+    lastUsed: str
+    lastVersionId: str
+    created: str
+    name: str
+    icon: str
+    type: Literal['latest-release', 'latest-snapshot', 'custom']
+
+
+class LauncherProfiles(TypedDict):
+    settings: _Settings
+    profiles: dict[str, _Profile]
+    version: int
+
+
 # ========= #
 #   Forge   #
 # ========= #
