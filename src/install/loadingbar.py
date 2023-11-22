@@ -168,7 +168,7 @@ class loadingbar(Generic[_T]):
             self.item = next(self.iterable)
             self.idx += 1
         else:
-            if TYPE_CHECKING and type(self.total) != int:
+            if TYPE_CHECKING and not isinstance(self.total, int):
                 raise TypeError
 
             if self.idx < self.total:  # total
@@ -202,7 +202,7 @@ class loadingbar(Generic[_T]):
 
         # Calculate progress
         if hasattr(self, 'total'):  # both, total
-            if TYPE_CHECKING and type(self.total) != int:
+            if TYPE_CHECKING and not isinstance(self.total, int):
                 raise TypeError
 
             percent = round(self.idx / self.total * 100, 0)
@@ -221,7 +221,7 @@ class loadingbar(Generic[_T]):
             current = size(self.idx, traditional)
             arg = self.total if hasattr(self, 'total') else self.iterator_len
 
-            if TYPE_CHECKING and type(arg) != int:
+            if TYPE_CHECKING and not isinstance(arg, int):
                 raise TypeError
 
             total = size(arg, traditional)
@@ -235,12 +235,10 @@ class loadingbar(Generic[_T]):
         # Print the loading bar
         start = '\033[F\r' if self.show_desc else '\r'
 
-        if self.show_desc and self._new_desc:
-            end = '\n\033[K' + self.desc
-        elif self.show_desc:
-            end = '\n' + self.desc
-        else:
-            end = ''
+        end = (
+            '\n\033[K' + self.desc if self.show_desc and self._new_desc
+            else '\n' + self.desc if self.show_desc else ''
+        )
 
         print(start + self.bar_format.format(
             title=self.title,
