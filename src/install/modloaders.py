@@ -387,6 +387,10 @@ class forge:
             bar.refresh()
 
 
+class fabric:
+    pass
+
+
 def inst_modloader(
     modloader: Modloader,
     modpack_version: str,
