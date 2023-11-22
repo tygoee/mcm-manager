@@ -15,20 +15,61 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from os import get_terminal_size
-from typing import Collection, Generic, Literal, TypeVar, Optional, Type
+from typing import Collection, Generic, Literal, TypeVar, Optional, overload, Type
 from types import TracebackType
 
 from .filesize import size, traditional
 
-T = TypeVar("T")
+_T = TypeVar("_T")
 
 
-class loadingbar(Generic[T]):
+class loadingbar(Generic[_T]):
+    @overload
     def __init__(
-        self, iterator: Collection[T] | None = None, /, *,
+        # total
+        self, iterator: Collection[_T], /, *,
+        unit: Literal['it', 'B'] = 'it',
+        bar_length: Optional[int] = None,
+        bar_format: str = "{title} {percentage:3.0f}% [{bar}] {current}/{total}",
+        title: str = '',
+        show_desc: bool = False,
+        desc: str = '',
+        disappear: bool = False,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        # total
+        self, /, *,
+        total: _T,
+        unit: Literal['it', 'B'] = 'it',
+        bar_length: Optional[int] = None,
+        bar_format: str = "{title} {percentage:3.0f}% [{bar}] {current}/{total}",
+        title: str = '',
+        show_desc: bool = False,
+        desc: str = '',
+        disappear: bool = False,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        # both
+        self, iterator: Optional[Collection[_T]] = None, /, *,
         total: int = 0,
         unit: Literal['it', 'B'] = 'it',
-        bar_length: int | None = None,
+        bar_length: Optional[int] = None,
+        bar_format: str = "{title} {percentage:3.0f}% [{bar}] {current}/{total}",
+        title: str = '',
+        show_desc: bool = False,
+        desc: str = '',
+        disappear: bool = False,
+    ) -> None: ...
+
+    def __init__(
+        self, iterator: Optional[Collection[_T]] = None, /, *,
+        total: int | _T = 0,
+        unit: Literal['it', 'B'] = 'it',
+        bar_length: Optional[int] = None,
         bar_format: str = "{title} {percentage:3.0f}% [{bar}] {current}/{total}",
         title: str = '',
         show_desc: bool = False,
@@ -58,17 +99,17 @@ class loadingbar(Generic[T]):
         self._iter_type: Literal['iter', 'total', 'both']
 
         if iterator is not None and total == 0:
-            self._iter_type = 'iter'
+            # iter
             self.iterator = iterator
             self.iterable = iter(iterator)
             self.iterator_len = len(iterator)
         elif iterator is None and total != 0:
-            self._iter_type = 'total'
+            # total
             self.iterator = None
             self.iterable = None
             self.total = total
         elif iterator is not None and total != 0:
-            self._iter_type = 'both'
+            # both
             self.iterator = iterator
             self.iterable = iter(iterator)
             self.iterator_len = len(iterator)
@@ -112,19 +153,19 @@ class loadingbar(Generic[T]):
         else:
             self.bar_length = bar_length
 
-    def __iter__(self) -> "loadingbar[T]":
+    def __iter__(self) -> "loadingbar[_T]":
         "Method that allows iterators"
 
         return self
 
-    def __next__(self) -> T:
+    def __next__(self) -> _T:
         "Go to the next iteration"
 
         # Update the item and idx
         if self.iterable is not None:
             self.item = next(self.iterable)
             self.idx += 1
-        elif self.idx < self.total:  # 'total'
+        elif type(self.total) == int and self.idx < self.total:  # total
             self.idx += 1
         else:
             raise StopIteration
@@ -133,12 +174,12 @@ class loadingbar(Generic[T]):
         self.refresh()
 
         # Return the item
-        if self.iterator is not None:  # 'both' or 'iter'
+        if self.iterator is not None:  # both or iter
             return self.item
         else:
             return self.idx  # type: ignore
 
-    def __enter__(self) -> "loadingbar[T]":
+    def __enter__(self) -> "loadingbar[_T]":
         "Allow a with-as statement"
 
         return self
@@ -154,7 +195,7 @@ class loadingbar(Generic[T]):
         "Refresh the loading bar, called automatically"
 
         # Calculate progress
-        if self._iter_type in ('both', 'total'):
+        if type(self.total) == int and self.total != 0:  # both, total
             percent = round(self.idx / self.total * 100, 0)
         else:
             percent = round(self.idx / self.iterator_len * 100, 0)
@@ -165,12 +206,14 @@ class loadingbar(Generic[T]):
         # Define the current and total
         if self.unit == 'it':
             current = str(self.idx)
-            total = str(self.total if self._iter_type in (
-                'both', 'total') else self.iterator_len)
+            total = str(self.total if self.total != 0 else self.iterator_len)
         else:
             current = size(self.idx, traditional)
-            total = size(self.total if self._iter_type in (
-                'both', 'total') else self.iterator_len, traditional)
+            if type(arg := self.total if self.total != 0
+                    else self.iterator_len) != int:
+                raise TypeError  # Shouldn't be able to happen
+
+            total = size(arg, traditional)
 
         # Define the text length
         text_length = self.formatting_length + \

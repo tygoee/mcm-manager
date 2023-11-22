@@ -218,7 +218,6 @@ def download_files(total_size: int, install_path: str, side: Side, manifest: Man
         show_desc=True,
         disappear=True
     ) as bar:
-        bar: loadingbar[int]  # The only way it worked out
         for url, fname, fsize, sides in iterator:
             if side not in sides:
                 # As the size isn't calculated, it
@@ -307,7 +306,8 @@ def install(
 
     # Print the mod info
     print(
-        f"\n{len(mods)} mods, {len(resourcepacks)} recourcepacks, {len(shaderpacks)} shaderpacks\n"
+        f"\n{len(mods)} mods, {len(resourcepacks)} "
+        f"recourcepacks, {len(shaderpacks)} shaderpacks\n"
         f"Total file size: {size(total_size, system=alternative)}"
     )
 

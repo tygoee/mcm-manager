@@ -53,7 +53,7 @@ class Loadingbar(unittest.TestCase):
             self.assertEqual(bar.desc, "Test description 2")
 
         # Updating with .update() and using total=int
-        bar_2: loadingbar[int] = loadingbar(total=100)
+        bar_2 = loadingbar(total=100)
         bar_2.update(50)
         self.assertEqual(bar_2.idx, 50)
 
