@@ -21,7 +21,7 @@ from typing import Any, Literal, Optional, TypedDict, TypeVar
 
 from .install.media import install
 from .install.modloaders import MINECRAFT_DIR
-from .install._types import Side
+from .typings import Side
 
 
 class Options(TypedDict):

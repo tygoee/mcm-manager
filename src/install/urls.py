@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from ._types import Media
+from ..typings import Media
 
 
 def media_url(media: Media) -> str:
@@ -44,9 +44,3 @@ class forge:
     def forge_installer_url(mc_version: str, forge_version: str) -> str:
         return "https://maven.minecraftforge.net/net/minecraftforge/forge/" \
             f"{mc_version}-{forge_version}/forge-{mc_version}-{forge_version}-installer.jar"
-
-
-class fabric:
-    @staticmethod
-    def api_url(*paths: str) -> str:
-        return "https://meta.fabricmc.net/" + '/'.join(paths)
