@@ -310,15 +310,15 @@ class _Intermediary(TypedDict):
     stable: bool
 
 
-class _FabricLibrary(TypedDict):
+class InstallerLibrary(TypedDict):
     name: str
     url: str
 
 
-class _FabricLibraries(TypedDict):
-    client: list[_FabricLibrary]
-    common: list[_FabricLibrary]
-    server: list[_FabricLibrary]
+class LoaderLibraries(TypedDict):
+    client: list[InstallerLibrary]
+    common: list[InstallerLibrary]
+    server: list[InstallerLibrary]
 
 
 class _MainClass(TypedDict):
@@ -328,7 +328,7 @@ class _MainClass(TypedDict):
 
 class _LauncherMeta(TypedDict):
     version: int
-    libraries: _FabricLibraries
+    libraries: LoaderLibraries
     mainClass: _MainClass
 
 
@@ -339,7 +339,7 @@ class LoaderJson(TypedDict):
     launcherMeta: _LauncherMeta
 
 
-class FabricLibrary(_FabricLibrary):
+class FabricLibrary(InstallerLibrary):
     "A fabric library"
     file: str
 
@@ -348,6 +348,6 @@ LibraryList = list[FabricLibrary]
 
 
 # Fabric version json
-class FabricVersionJson(_JavaJson[_FabricLibrary]):
+class FabricVersionJson(_JavaJson[InstallerLibrary]):
     "Fabric's minecraft version.json file"
     inheritsFrom: str

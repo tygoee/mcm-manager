@@ -21,7 +21,7 @@ from urllib import request
 if TYPE_CHECKING:
     from http.client import HTTPResponse
 
-from ..typings import FabricVersionJson, LoaderJson, LibraryList
+from ..typings import FabricVersionJson, LoaderJson, InstallerLibrary, LibraryList
 
 from ..common.maven_coords import maven_parse
 
@@ -74,17 +74,18 @@ class loader:
 
     def libraries(
         self, launcher_dir: str,
-        side: Optional[Literal['client', 'server']] = None
+        side: Optional[Literal['client', 'server']] = None,
+        extra: list[InstallerLibrary] = []
     ) -> LibraryList:
         """Get all the libraries with a filename"""
         libs: LibraryList = []
 
         for lib_type in self.result['launcherMeta']['libraries'].keys():
-            if (lib_type not in ('client', 'common', 'server') or
-                    not (side is None or side == lib_type or side == 'common')):
+            if (lib_type not in ('client', 'common', 'server') or not
+                    (side in (None, lib_type) or lib_type == 'common')):
                 continue
 
-            for lib in self.result['launcherMeta']['libraries'][lib_type]:
+            for lib in self.result['launcherMeta']['libraries'][lib_type] + extra:
                 maven = maven_parse(lib['name'])
                 libs.append({
                     'name': lib['name'],

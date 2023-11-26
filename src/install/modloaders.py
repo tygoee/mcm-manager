@@ -20,7 +20,7 @@ from os import path, getenv, mkdir, makedirs, rename
 from shutil import rmtree, copyfile
 from subprocess import check_call, DEVNULL
 from sys import platform
-from typing import overload, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from urllib import request
 from zipfile import ZipFile
 
@@ -34,7 +34,7 @@ from ..common.maven_coords import maven_parse
 from ..apis import fabric_meta, piston_meta
 
 from ..typings import (
-    Client, Server, Side, Modloader,
+    Side, Modloader,
     ForgeLibrary, OSLibrary,
     InstallProfile, Libraries,
     ForgeVersionJson
@@ -53,19 +53,6 @@ MINECRAFT_DIR = _minecraft_dirs.get(platform, '')
 
 
 class forge:
-    @overload
-    def __init__(self, mc_version: str,
-                 forge_version: str,
-                 side: Client,
-                 install_dir: str = ...,
-                 launcher_dir: str = ...) -> None: ...
-
-    @overload
-    def __init__(self, mc_version: str,
-                 forge_version: str,
-                 side: Server,
-                 install_dir: str = ...) -> None: ...
-
     def __init__(self, mc_version: str,
                  forge_version: str,
                  side: Side = 'client',
@@ -385,11 +372,13 @@ class forge:
 
 
 class fabric:
-    def __init__(self, mc_version: str,
-                 fabric_version: str,
-                 side: Side,
-                 install_dir: str = MINECRAFT_DIR,
-                 launcher_dir: str = MINECRAFT_DIR) -> None:
+    def __init__(
+        self, mc_version: str,
+        fabric_version: str,
+        side: Side,
+        install_dir: str = MINECRAFT_DIR,
+        launcher_dir: str = MINECRAFT_DIR
+    ) -> None:
 
         self.mc_version = mc_version
 
@@ -406,7 +395,10 @@ class fabric:
 
         loader = fabric_meta.loader(mc_version, fabric_version)
         self.version_json = loader.profile_json()
-        self.libraries = loader.libraries(launcher_dir)
+        self.libraries = loader.libraries(launcher_dir, side, [{
+            'name': f'net.fabricmc:fabric-loader:{self.fabric_version}',
+            'url': 'https://maven.fabricmc.net/'
+        }])
 
         # Exit if the launcher hasn't launched once
         if not path.isfile(path.join(launcher_dir, 'launcher_profiles.json')) and side == 'client':
@@ -425,6 +417,9 @@ class fabric:
 
     def download_jar_files(self) -> None:
         """Download the jar files"""
+
+        # TODO @@@ net/fabricmc/fabric-loader has to be installed @@@
+        # loader_maven = f"net.fabricmc:fabric-loader:{self.mc_version}"
 
         # Create the temp dir
         if not path.isdir(self.temp_dir):
