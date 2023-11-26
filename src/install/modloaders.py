@@ -379,6 +379,15 @@ class fabric:
         install_dir: str = MINECRAFT_DIR,
         launcher_dir: str = MINECRAFT_DIR
     ) -> None:
+        """
+        Installs a specified forge version
+
+        :param mc_version: The minecraft version, for example `'1.20.1'`
+        :param forge_version: The forge version, for example `'47.1.0'`
+        :param side: The side; `'client'` or `'server'`
+        :param install_dir: The directory minecraft forge gets installed
+        :param launcher_dir: The launcher dir (ignored if on server side)
+        """
 
         self.mc_version = mc_version
 
@@ -390,8 +399,6 @@ class fabric:
         self.side: Side = side
         self.install_dir = install_dir
         self.launcher_dir = launcher_dir
-
-        self.temp_dir = path.join(launcher_dir, '.temp')
 
         loader = fabric_meta.loader(mc_version, fabric_version)
         self.version_json = loader.profile_json()
@@ -417,20 +424,6 @@ class fabric:
 
     def download_jar_files(self) -> None:
         """Download the jar files"""
-
-        # TODO @@@ net/fabricmc/fabric-loader has to be installed @@@
-        # loader_maven = f"net.fabricmc:fabric-loader:{self.mc_version}"
-
-        # Create the temp dir
-        if not path.isdir(self.temp_dir):
-            mkdir(self.temp_dir)
-        else:
-            rmtree(self.temp_dir)
-            mkdir(self.temp_dir)
-
-        # Delete the temp dir at exit
-        register(lambda: rmtree(self.temp_dir) if path.isdir(
-            self.temp_dir) else None)
 
         # Download everything
         for library in self.libraries:
