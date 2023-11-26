@@ -18,7 +18,6 @@ from json import load
 from os import path, mkdir
 from urllib import parse, request, error
 
-from .headers import headers
 from .urls import media_url
 from .loadingbar import loadingbar
 from .modloaders import inst_modloader, MINECRAFT_DIR
@@ -26,6 +25,15 @@ from .filesize import size, alternative
 
 from ..typings import Manifest, URLMedia, Media, MediaList, Side
 
+# The headers to mimic a common browser user agent
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1"
+}
 
 class prepare:
     def __init__(self, install_path: str, side: Side, manifest: Manifest) -> None:
