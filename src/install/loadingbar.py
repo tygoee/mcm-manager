@@ -215,11 +215,10 @@ class loadingbar(Generic[_T]):
         # Define the current and total
         if self.unit == 'it':
             current = str(self.idx)
-            total = str(self.total if hasattr(
-                self, 'total') else self.iterator_len)
+            total = str(getattr(self, 'total', self.iterator_len))
         else:
             current = size(self.idx, traditional)
-            arg = self.total if hasattr(self, 'total') else self.iterator_len
+            arg = getattr(self, 'total', self.iterator_len)
 
             if TYPE_CHECKING and not isinstance(arg, int):
                 raise TypeError
@@ -249,7 +248,7 @@ class loadingbar(Generic[_T]):
         ), end=end)
 
         # Clear the loading bar at the end
-        if self.idx == (self.total if hasattr(self, 'total') else self.iterator_len):
+        if self.idx == getattr(self, 'total', self.iterator_len):
             if self.disappear and self.show_desc:
                 print('\r\033[K\033[F\r\033[K', end='')
             elif self.disappear:
