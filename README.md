@@ -6,7 +6,7 @@
 
 Minecraft modpack manager - This solves the problem of having to install mods manually. Currently, you need to edit the file manually, as this is still in it's alpha phase. You can currently download mods from curseforge, modrinth and planet minecraft and custom urls. You can also install forge automatically. Currently, mods, resourcepacks and shaderpacks are supported.
 
-## "Building" to a `.pyz` file
+## Building to a `.pyz` file
 
 How to make a `.pyz` file:
 
