@@ -108,10 +108,10 @@ class parse:
 
         _T = TypeVar("_T")
 
-        def ask(arg: _T | None, question: _T) -> _T | str:
+        def ask(arg: _T | None, question: str) -> _T | str:
             return input(question) if arg is None else arg
 
-        def ask_yes(arg: _T, question: _T) -> bool:
+        def ask_yes(arg: bool, question: str) -> bool:
             return input(question).lower() == 'y' if arg else arg
 
         # Define all questions
