@@ -46,7 +46,7 @@ class maven_parse:
             ext = 'jar'
 
         # Until the third colon, replace
-        # ':' with path.sep. Until the
+        # ':' with '/'. Until the
         # first, also replace '.' with it
         colons = 0
         folder = ''
@@ -55,9 +55,9 @@ class maven_parse:
                 break
             if char == ':':
                 colons += 1
-                char = path.sep
+                char = '/'
             elif char == '.' and colons == 0:
-                char = path.sep
+                char = '/'
             folder += char
 
         if not folder[-1] == '/':
