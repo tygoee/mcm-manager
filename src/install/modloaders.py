@@ -383,12 +383,12 @@ class fabric:
         launcher_dir: str = MINECRAFT_DIR
     ) -> None:
         """
-        Installs a specified forge version
+        Installs a specified fabric version
 
         :param mc_version: The minecraft version, for example `'1.20.1'`
-        :param forge_version: The forge version, for example `'47.1.0'`
+        :param fabric_version: The fabric version, for example `'47.1.0'`
         :param side: The side; `'client'` or `'server'`
-        :param install_dir: The directory minecraft forge gets installed
+        :param install_dir: The directory minecraft fabric gets installed
         :param launcher_dir: The launcher dir (ignored if on server side)
         """
 
@@ -404,10 +404,11 @@ class fabric:
         self.launcher_dir = launcher_dir
 
         loader = fabric_meta.loader(mc_version, fabric_version)
+
         self.version_json = loader.profile_json()
         self.libraries = loader.libraries(launcher_dir, side, [{
-            'name': f'net.fabricmc:fabric-loader:{self.fabric_version}',
-            'url': 'https://maven.fabricmc.net/'
+            'name': loader.loader['maven'], 'url': "https://maven.fabricmc.net/"}, {
+            'name': loader.intermediary['maven'], 'url': "https://maven.fabricmc.net/"
         }])
 
         # Exit if the launcher hasn't launched once
