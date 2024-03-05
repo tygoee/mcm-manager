@@ -20,7 +20,7 @@ from os import path
 class maven_parse:
     def __init__(self, arg: str) -> None:
         """
-        Parse java maven coords to a folder and a file.
+        Parse java maven coords to a folder and file or to an url.
 
         Example:
         ```txt
@@ -29,8 +29,8 @@ class maven_parse:
         - file: mcp_config-1.20.1-20230612.114412.zip
         ```
 
-        You can get a file path using `.maven_to_file()`
-        or an url using `.maven_to_url`.
+        You can get a file path using `.to_file()`
+        or an url using `.to_url()`
 
         To directly access the parsed result,
         use the variable `.parsed`
