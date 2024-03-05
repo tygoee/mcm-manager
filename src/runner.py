@@ -103,15 +103,15 @@ class parse:
         return _Args(**vars(cls.parser.parse_args()))
 
     @classmethod
-    def _cli(cls, args: _Args):
+    def _cli(cls, args: _Args) -> None:
         """Ask questions and execute `install()` with the answers"""
 
         _T = TypeVar("_T")
 
-        def ask(arg: _T | None, question: _T) -> _T | str:
+        def ask(arg: _T | None, question: str) -> _T | str:
             return input(question) if arg is None else arg
 
-        def ask_yes(arg: _T, question: _T) -> bool:
+        def ask_yes(arg: bool, question: str) -> bool:
             return input(question).lower() == 'y' if arg else arg
 
         # Define all questions
@@ -159,7 +159,7 @@ class parse:
         install(**answers)
 
     @classmethod
-    def execute(cls, args: _Args):
+    def execute(cls, args: _Args) -> None:
         if args.s not in ('client', 'server') and args.s is not None:
             raise TypeError(
                 "side has to be either 'client', 'server' or None.")
@@ -189,7 +189,7 @@ class parse:
                 )
 
 
-def main():
+def main() -> None:
     # Get the command-line arguments
     args = parse()
 
