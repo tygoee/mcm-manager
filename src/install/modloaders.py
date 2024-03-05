@@ -500,11 +500,10 @@ def inst_modloader(
 
     match modloader:
         case 'forge':
-            if side == 'client':
-                forge(modpack_version, modloader_version,
-                      side, install_path, launcher_path)
-            elif side == 'server':
-                forge(modpack_version, modloader_version,
-                      side, install_path)
+            forge(modpack_version, modloader_version,
+                  side, install_path, launcher_path)
+        case 'fabric':
+            fabric(modpack_version, modloader_version,
+                   side, install_path, launcher_path)
         case _:
             print("WARNING: Couldn't install modloader because it isn't supported.")
