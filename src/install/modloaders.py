@@ -307,7 +307,10 @@ class forge:
             rules = library.get('rules', [])
 
             self.libraries[library['name']] = library['downloads']['artifact']
-            self.libraries[library['name']].update(rules[-1] if rules else {})
+
+            # A bug in the type checker, it worked earlier
+            self.libraries[library['name']].update(
+                rules[-1] if rules else {})  # type: ignore
 
         # Define the total size
         total_size = sum([library['size']
@@ -398,7 +401,7 @@ def inst_modloader(
     side: Side,
     install_path: str,
     launcher_path: str
-):
+) -> None:
     """
     Installs the modloader. Used internally by media.py
 

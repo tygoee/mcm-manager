@@ -141,7 +141,7 @@ class prepare:
             print(f"  {media['slug']} ({parse.unquote(media['name'])})")
 
 
-def download_file(url: str, fname: str, bar: loadingbar[int]):
+def download_file(url: str, fname: str, bar: loadingbar[int]) -> None:
     try:
         # Download and write the file
         with request.urlopen(url) as resp, open(fname, 'wb') as media_file:

@@ -274,7 +274,7 @@ class loadingbar(Generic[_T]):
             self.idx += amount
             self.refresh()
 
-    def set_desc(self, description: str):
+    def set_desc(self, description: str) -> None:
         "Set the description"
 
         # Cut off the description if it's longer than the terminal width
