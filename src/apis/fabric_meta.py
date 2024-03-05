@@ -15,13 +15,17 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from json import loads
-from typing import Literal, Optional, overload, TYPE_CHECKING
+from typing import Literal, Optional, overload
 from urllib import request
+from http.client import HTTPResponse
+from ..typings import (
+    # Versions
+    GameVersion, IntermediaryVersion,
+    YarnVersion, AllVersions,
 
-if TYPE_CHECKING:
-    from http.client import HTTPResponse
-
-from ..typings import FabricVersionJson, LoaderJson, InstallerLibrary, LibraryList
+    # Loader
+    FabricVersionJson, LoaderJson, InstallerLibrary, LibraryList
+)
 
 from ..common.maven_coords import maven_parse
 
@@ -33,23 +37,130 @@ def api_url(url: str, *paths: str) -> str:
     return url + '/'.join(paths)
 
 
+# Types are not defined because these endpoints are unused
+class versions:
+    def __init__(self, game_version: Optional[str] = None) -> None:
+        """
+        Creates a fabric-meta versions object.
+
+        :param game_version: The minecraft version to select
+        """
+
+        self.game_version = game_version
+        self._base_url = "https://meta.fabricmc.net/v2/versions/"
+
+    def all(self) -> AllVersions:
+        "Full database, includes all the data. Warning: large JSON."
+
+        url = api_url(self._base_url)
+        response: HTTPResponse = request.urlopen(url)
+
+        return loads(response.read())
+
+    def yarn(self) -> list[YarnVersion]:
+        """
+        Lists all of the yarn versions, stable is based on the Minecraft version.
+        When `game_version` is specified, it lists all of the yarn versions for the provided game version.
+        """
+
+        if self.game_version is None:
+            url = api_url(self._base_url, 'yarn')
+        else:
+            url = api_url(self._base_url, 'yarn', self.game_version)
+
+        response: HTTPResponse = request.urlopen(url)
+
+        return loads(response.read())
+
+    def intermediary(self) -> list[IntermediaryVersion]:
+        """
+        Lists all of the intermediary versions, stable is based of the Minecraft version.
+        When `game_version` is specified, it only lists the provided game version.
+        """
+
+        if self.game_version is None:
+            url = api_url(self._base_url, 'intermediary')
+        else:
+            url = api_url(self._base_url, 'intermediary', self.game_version)
+
+        response: HTTPResponse = request.urlopen(url)
+
+        return loads(response.read())
+
+
+class game:
+    def __init__(self) -> None:
+        "Creates a fabric-meta game versions object"
+
+        self._base_url = "https://meta.fabricmc.net/v2/versions/game/"
+
+    def all(self) -> list[GameVersion]:
+        "Lists all of the supported game versions."
+
+        url = api_url(self._base_url)
+        response: HTTPResponse = request.urlopen(url)
+
+        return loads(response.read())
+
+    def yarn(self) -> list[GameVersion]:
+        "Lists all of the compatible game versions for yarn."
+
+        url = api_url(self._base_url, 'yarn')
+        response: HTTPResponse = request.urlopen(url)
+
+        return loads(response.read())
+
+    def intermediary(self) -> list[GameVersion]:
+        "Lists all of the compatible game versions for intermediary."
+
+        url = api_url(self._base_url, 'intermediary')
+        response: HTTPResponse = request.urlopen(url)
+
+        return loads(response.read())
+
+
 class loader:
     @overload
     def __init__(
         self, game_version: str,
         loader_version: Optional[str] = None
-    ) -> None: ...
+    ) -> None:
+        """
+        Creates a fabric-meta loader object.
+
+        To get the result, use `loader.result`.
+        For other values, use `loader`, `intermediary` and `launcher_meta`
+
+        :param game_version: The minecraft version to select
+        :param loader_version: The fabric loader version to select
+        """
 
     @overload
     def __init__(
         self, game_version: Optional[str] = None
-    ) -> None: ...
+    ) -> None:
+        """
+        Creates a fabric-meta loader object.
+
+        To get the result, use `loader.result`.
+        For other values, use `loader`, `intermediary` and `launcher_meta`
+
+        :param game_version: The minecraft version to select
+        """
 
     def __init__(
         self, game_version: Optional[str] = None,
         loader_version: Optional[str] = None
     ) -> None:
-        """Create an fabric-meta loader object"""
+        """
+        Creates a fabric-meta loader object.
+
+        To get the result, use `loader.result`.
+        For other values, use `loader`, `intermediary` and `launcher_meta`
+
+        :param game_version: The minecraft version to select
+        :param loader_version: The fabric loader version to select
+        """
 
         self.game_version = game_version
         self.loader_version = loader_version
@@ -69,15 +180,19 @@ class loader:
                 "'loader_version' may not be passed when 'game_version' is None"
             )
 
-        response: 'HTTPResponse' = request.urlopen(api_url(self._url))
+        response: HTTPResponse = request.urlopen(api_url(self._url))
         self.result: LoaderJson = loads(response.read().decode('utf-8'))
+
+        self.loader = self.result['loader']
+        self.intermediary = self.result['intermediary']
+        self.launcher_meta = self.result['launcherMeta']
 
     def libraries(
         self, launcher_dir: str,
         side: Optional[Literal['client', 'server']] = None,
         extra: list[InstallerLibrary] = []
     ) -> LibraryList:
-        """Get all the libraries with a filename"""
+        "Lists all of the libraries"
         libs: LibraryList = []
 
         for lib_type in self.result['launcherMeta']['libraries'].keys():
@@ -96,18 +211,21 @@ class loader:
         return libs
 
     def profile_json(self) -> FabricVersionJson:
+        "Returns the JSON file that should be used in the standard Minecraft launcher."
+
         if not self._complete:
             raise ValueError(
-                "Cannot fetch profile zip if 'game_version' "
+                "Cannot fetch profile json if 'game_version' "
                 "and 'loader_version' isn't specified"
             )
 
         url = api_url(self._url, 'profile', 'json')
-        response: 'HTTPResponse' = request.urlopen(url)
+        response: HTTPResponse = request.urlopen(url)
 
         return loads(response.read().decode('utf-8'))
 
     def profile_zip(self) -> bytes:
+        "Downloads a zip file with the launcher's profile json, and the dummy jar. To be extracted into .minecraft/versions"
         if not self._complete:
             raise ValueError(
                 "Cannot fetch profile zip if 'game_version' "
@@ -115,6 +233,19 @@ class loader:
             )
 
         url = api_url(self._url, 'profile', 'zip')
-        response: 'HTTPResponse' = request.urlopen(url)
+        response: HTTPResponse = request.urlopen(url)
+
+        return response.read()
+
+    def server_json(self) -> bytes:
+        "Returns the JSON file in format of the launcher JSON, but with the server's main class."
+        if not self._complete:
+            raise ValueError(
+                "Cannot fetch server json if 'game_version' "
+                "and 'loader_version' isn't specified"
+            )
+
+        url = api_url(self._url, 'server', 'json')
+        response: HTTPResponse = request.urlopen(url)
 
         return response.read()

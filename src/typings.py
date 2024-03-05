@@ -295,21 +295,39 @@ class InstallProfile(TypedDict):
 #   Fabric   #
 # ========== #
 
-# Loader
-class _Loader(TypedDict):
-    seperator: str
+
+# Versions
+class GameVersion(TypedDict):
+    version: str
+    stable: bool
+
+
+class IntermediaryVersion(GameVersion):
+    maven: str
+
+
+class LoaderVersion(IntermediaryVersion):
+    separator: str
     build: int
-    maven: str
-    version: str
-    stable: bool
 
 
-class _Intermediary(TypedDict):
-    maven: str
-    version: str
-    stable: bool
+class InstallerVersion(IntermediaryVersion):
+    url: str
 
 
+class YarnVersion(LoaderVersion):
+    gameVersion: str
+
+
+class AllVersions(TypedDict):
+    game: list[GameVersion]
+    mappings: list[YarnVersion]
+    intermediary: list[IntermediaryVersion]
+    loader: list[LoaderVersion]
+    installer: ...
+
+
+# Loader
 class InstallerLibrary(TypedDict):
     name: str
     url: str
@@ -321,22 +339,22 @@ class LoaderLibraries(TypedDict):
     server: list[InstallerLibrary]
 
 
-class _MainClass(TypedDict):
+class MainClass(TypedDict):
     client: str
     server: str
 
 
-class _LauncherMeta(TypedDict):
+class LauncherMeta(TypedDict):
     version: int
     libraries: LoaderLibraries
-    mainClass: _MainClass
+    mainClass: MainClass
 
 
 class LoaderJson(TypedDict):
     "Information about the fabric loader"
-    loader: _Loader
-    intermediary: _Intermediary
-    launcherMeta: _LauncherMeta
+    loader: LoaderVersion
+    intermediary: IntermediaryVersion
+    launcherMeta: LauncherMeta
 
 
 class FabricLibrary(InstallerLibrary):
