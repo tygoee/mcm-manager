@@ -115,7 +115,7 @@ class parse:
             if args.y == True:
                 return False
 
-            return input(question).lower() == 'y' if arg else arg
+            return input(question).lower() == 'y' if not arg else arg
 
         # Define all questions
         questions = [
