@@ -85,12 +85,7 @@ class Urls(unittest.TestCase):
         for k, v in cases.items():
             self.assertEqual(k, v)
 
-        # Test the forge urls
-        self.assertEqual(
-            forge.version_manifest_v2,
-            "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
-        )
-
+        # Test the forge installer url
         self.assertEqual(
             forge.forge_installer_url('1.20.1', '47.1.0'),
             "https://maven.minecraftforge.net/net/minecraftforge/forge/"

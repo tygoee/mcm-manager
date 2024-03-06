@@ -97,6 +97,37 @@ class Manifest(TypedDict):
 # ============================ #
 Modloader = Literal['forge', 'fabric'] | str
 
+
+class _Settings(TypedDict):
+    enableAnalytics: bool
+    enableAdvanced: bool
+    keepLauncherOpen: bool
+    soundOn: bool
+    showMenu: bool
+    enableSnapshots: bool
+    enableHistorical: bool
+    enableReleases: bool
+    profileSorting: str
+    showGameLog: bool
+    crashAssistance: bool
+
+
+class _Profile(TypedDict, total=False):
+    gameDir: str
+    lastUsed: str
+    lastVersionId: str
+    created: str
+    name: str
+    icon: str
+    type: Literal['latest-release', 'latest-snapshot', 'custom']
+
+
+class LauncherProfiles(TypedDict):
+    settings: _Settings
+    profiles: dict[str, _Profile]
+    version: int
+
+
 # ========= #
 #   Forge   #
 # ========= #
@@ -264,51 +295,69 @@ class InstallProfile(TypedDict):
 #   Fabric   #
 # ========== #
 
-# Loader
-class _Loader(TypedDict):
-    seperator: str
+
+# Versions
+class GameVersion(TypedDict):
+    version: str
+    stable: bool
+
+
+class IntermediaryVersion(GameVersion):
+    maven: str
+
+
+class LoaderVersion(IntermediaryVersion):
+    separator: str
     build: int
-    maven: str
-    version: str
-    stable: bool
 
 
-class _Intermediary(TypedDict):
-    maven: str
-    version: str
-    stable: bool
+class InstallerVersion(IntermediaryVersion):
+    url: str
 
 
-class _FabricLibrary(TypedDict):
+class YarnVersion(LoaderVersion):
+    gameVersion: str
+
+
+class AllVersions(TypedDict):
+    game: list[GameVersion]
+    mappings: list[YarnVersion]
+    intermediary: list[IntermediaryVersion]
+    loader: list[LoaderVersion]
+    installer: ...
+
+
+# Loader
+class InstallerLibrary(TypedDict):
     name: str
     url: str
 
 
-class _FabricLibraries(TypedDict):
-    client: list[_FabricLibrary]
-    common: list[_FabricLibrary]
-    server: list[_FabricLibrary]
+class LoaderLibraries(TypedDict):
+    client: list[InstallerLibrary]
+    common: list[InstallerLibrary]
+    server: list[InstallerLibrary]
 
 
-class _MainClass(TypedDict):
+class MainClass(TypedDict):
     client: str
     server: str
 
 
-class _LauncherMeta(TypedDict):
+class LauncherMeta(TypedDict):
     version: int
-    libraries: _FabricLibraries
-    mainClass: _MainClass
+    libraries: LoaderLibraries
+    mainClass: MainClass
 
 
 class LoaderJson(TypedDict):
     "Information about the fabric loader"
-    loader: _Loader
-    intermediary: _Intermediary
-    launcherMeta: _LauncherMeta
+    loader: LoaderVersion
+    intermediary: IntermediaryVersion
+    launcherMeta: LauncherMeta
 
 
-class FabricLibrary(_FabricLibrary):
+class FabricLibrary(InstallerLibrary):
     "A fabric library"
     file: str
 
@@ -317,6 +366,6 @@ LibraryList = list[FabricLibrary]
 
 
 # Fabric version json
-class FabricVersionJson(_JavaJson[_FabricLibrary]):
+class FabricVersionJson(_JavaJson[InstallerLibrary]):
     "Fabric's minecraft version.json file"
     inheritsFrom: str

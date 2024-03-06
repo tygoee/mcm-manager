@@ -40,7 +40,7 @@ class _Args:
 
     # Options
     y: bool            # confirm installation
-    o: bool            # skip modloader install
+    o: bool            # install modloader
     m: Optional[str]   # manifest
     i: Optional[str]   # install path
     s: Optional[Side]  # side
@@ -83,7 +83,7 @@ class parse:
             (('-i',), 'INSTPATH', "specify the path where it will be installed"),
             (('-s',), 'SIDE', "specify the side to be installed (client or server)"),
             (('-l',), 'LAUNCHERPATH', "specify the path of the launcher"),
-            (('-o',), "skip the installation of the modloader"),
+            (('-o',), "install the modloader"),
         ]
 
         # Add optional arguments
@@ -112,7 +112,10 @@ class parse:
             return input(question) if arg is None else arg
 
         def ask_yes(arg: bool, question: str) -> bool:
-            return input(question).lower() == 'y' if arg else arg
+            if args.y:
+                return False
+
+            return input(question).lower() == 'y' if not arg else arg
 
         # Define all questions
         questions = [
@@ -129,7 +132,7 @@ class parse:
                 "manifest_file": ask(args.m, questions[0]),
                 "install_path": ask(args.i, questions[1]),
                 "side": 'server' if ask(args.s, questions[2]) == 'server' else 'client',
-                "install_modloader": (inst_modl := ask_yes(not args.o, questions[3])),
+                "install_modloader": (inst_modl := ask_yes(args.o, questions[3])),
                 "launcher_path": ask(args.l, questions[4]) if inst_modl else '',
                 "confirm": not args.y
             }
@@ -174,7 +177,7 @@ class parse:
                                                          'modpacks', 'example-manifest.json'),
                     "install_path": args.i or path.join(cls.current_dir, '..', 'share', 'gamedir'),
                     "side": 'server' if args.s == 'server' else 'client',
-                    "install_modloader": (inst_modl := not args.o),
+                    "install_modloader": (inst_modl := args.o),
                     "launcher_path": args.l if args.l is not None and inst_modl else MINECRAFT_DIR,
                     "confirm": not args.y
                 }

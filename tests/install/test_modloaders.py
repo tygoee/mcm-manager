@@ -35,13 +35,11 @@ class Modloaders(unittest.TestCase):
         setup_dirs()
         forge('1.20.1', '47.1.0', 'server', INSTDIR)
 
-
-if False:  # Tests of unfinished features
     @quiet
     @cleanup
     def test_fabric_client(self):
         setup_dirs()
-        fabric('1.20.1', '0.14.22', 'client', INSTDIR)
+        fabric('1.20.1', '0.14.22', 'client', INSTDIR, LAUNDIR)
 
     @quiet
     @cleanup

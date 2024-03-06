@@ -249,7 +249,7 @@ class loadingbar(Generic[_T]):
         ), end=end)
 
         # Clear the loading bar at the end
-        if self.idx == (self.total if hasattr(self, 'total') else self.iterator_len):
+        if self.idx == self.total if hasattr(self, 'total') else self.iterator_len:
             if self.disappear and self.show_desc:
                 print('\r\033[K\033[F\r\033[K', end='')
             elif self.disappear:

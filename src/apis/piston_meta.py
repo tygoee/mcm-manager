@@ -14,12 +14,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# The headers to mimic a common browser user agent
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.5",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1"
-}
+from http.client import HTTPResponse
+from json import loads
+from urllib import request
+
+
+from ..typings import MinecraftJson
+
+version_manifest_v2 = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+
+
+def get_minecraft_json(mc_version: str) -> MinecraftJson:
+    """Get the minecraft json from a minecraft"""
+    res: HTTPResponse = request.urlopen(version_manifest_v2)
+    for item in loads(res.read().decode('utf-8'))['versions']:
+        if item['id'] == mc_version:
+            res = request.urlopen(item['url'])
+            return loads(res.read().decode('utf-8'))
+
+    raise KeyError("Couldn't find minecraft version in version manifest")
