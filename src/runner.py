@@ -112,7 +112,7 @@ class parse:
             return input(question) if arg is None else arg
 
         def ask_yes(arg: bool, question: str) -> bool:
-            if args.y == True:
+            if args.y:
                 return False
 
             return input(question).lower() == 'y' if not arg else arg

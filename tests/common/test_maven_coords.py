@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import unittest
+from os import path
 
 from src.common.maven_coords import maven_parse
 
@@ -65,7 +66,11 @@ class MavenParse(unittest.TestCase):
         ]
 
         for i in cases:
+            # replace paths with path.sep
+            p = (i[0], (i[1][0].replace('/', path.sep), i[1][1]),
+                 i[2].replace('/', path.sep), i[3])
+
             maven = maven_parse(i[0])
             self.assertEqual(maven.parsed, i[1])
-            self.assertEqual(maven.to_file('libraries'), i[2])
+            self.assertEqual(maven.to_file('libraries'), p[2])
             self.assertEqual(maven.to_url('https://example.com'), i[3])

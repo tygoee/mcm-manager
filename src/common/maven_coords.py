@@ -81,7 +81,10 @@ class maven_parse:
         Create a file path from the maven coord. This calls
         a `path.join()` with all paths plus `self.parsed`
         """
-        return path.join(*paths, *self.parsed)
+
+        parsed = (self.parsed[0].replace('/', path.sep), self.parsed[1])
+
+        return path.join(*paths, *parsed)
 
     def to_url(self, base: str) -> str:
         """Create a url from the maven coord"""

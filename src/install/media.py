@@ -93,12 +93,6 @@ class prepare:
             if 'sides' not in media.keys():
                 media['sides'] = sides
 
-            try:
-                print(
-                    f"https://www.curseforge.com/minecraft/mc-mods/{media['slug']}/files/{media['id']}")
-            except:
-                print(media)
-
     def _get_headers(self, media: Media, url: str) -> None:
         "Recieve the content-length headers"
         try:
