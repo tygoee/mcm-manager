@@ -413,6 +413,9 @@ class fabric:
 
         # Exit if the launcher hasn't launched once
         if not path.isfile(path.join(launcher_dir, 'launcher_profiles.json')) and side == 'client':
+            print(launcher_dir)
+            print(path.exists(launcher_dir))
+            print(path.join(launcher_dir, 'launcher_profiles.json'))
             raise FileNotFoundError(
                 "Launch the launcher once before installing fabric.")
 
