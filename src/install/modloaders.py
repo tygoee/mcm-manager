@@ -392,8 +392,6 @@ class fabric:
         :param launcher_dir: The launcher dir (ignored if on server side)
         """
 
-        self.mc_version = mc_version
-
         # Define the class variables
         launcher_dir = install_dir if side == 'server' else launcher_dir
 
@@ -413,9 +411,6 @@ class fabric:
 
         # Exit if the launcher hasn't launched once
         if not path.isfile(path.join(launcher_dir, 'launcher_profiles.json')) and side == 'client':
-            print(launcher_dir)
-            print(path.exists(launcher_dir))
-            print(path.join(launcher_dir, 'launcher_profiles.json'))
             raise FileNotFoundError(
                 "Launch the launcher once before installing fabric.")
 
