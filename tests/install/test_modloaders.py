@@ -23,13 +23,11 @@ from src.install.modloaders import forge, fabric
 
 
 class Modloaders(unittest.TestCase):
-    @quiet
     @cleanup
     def test_forge_client(self):
         setup_dirs()
         forge('1.20.1', '47.1.0', 'client', INSTDIR, LAUNDIR)
 
-    @quiet
     @cleanup
     def test_forge_server(self):
         setup_dirs()
