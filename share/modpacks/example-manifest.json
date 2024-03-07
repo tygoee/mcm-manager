@@ -1,7 +1,7 @@
 {
     "minecraft": {
         "version": "1.20.1",
-        "modloader": "forge-47.1.0"
+        "modloader": "forge-47.2.0"
     },
     "mods": [
         {
@@ -603,8 +603,8 @@
         {
             "type": "cf",
             "slug": "additional-structures",
-            "name": "Rex%27s-AdditionalStructures-1.20.x-(v.4.1.2).jar",
-            "id": 4594908
+            "name": "Rex%27s-AdditionalStructures-1.20.x-%28v.4.2.1%29.jar",
+            "id": 4765735
         },
         {
             "type": "cf",
