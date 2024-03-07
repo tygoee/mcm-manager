@@ -256,8 +256,8 @@
         {
             "type": "cf",
             "slug": "displaycase",
-            "name": "Display+Case-forge-1.20-1.0.7.jar",
-            "id": 4690652
+            "name": "Display+Case-forge-1.20-1.0.8.jar",
+            "id": 4921336
         },
         {
             "type": "cf",
@@ -789,16 +789,16 @@
     ],
     "resourcepacks": [
         {
-            "type": "cf",
-            "slug": "renewedmenu",
-            "name": "%c2%a78%c2%a7l%c2%a7nRenewed%c2%a77%c2%a7l%c2%a7nMen%c3%b9%c2%a7rv3.2.zip",
-            "id": 4600569
+            "type": "pm",
+            "slug": "1-13-1-16-unique-spawn-eggs",
+            "name": "unique-spawn-eggs-v1-5.zip",
+            "media": "texture"
         },
         {
-            "type": "pm",
-            "slug": "xxvi-s-better-cauldrons",
-            "name": "better-cauldrons.zip",
-            "media": "texture"
+            "type": "mr",
+            "slug": "c418-songs-only",
+            "name": "jJAtxomySa7EKx9l",
+            "id": "%C2%A73%C2%A7lC418%20Songs%20Only%20%5B1.20%20-%201.20.1%5D.zip"
         },
         {
             "type": "cf",
@@ -811,6 +811,12 @@
             "slug": "icons",
             "name": "Icons+v.1.8.zip",
             "id": 4602944
+        },
+        {
+            "type": "cf",
+            "slug": "renewedmenu",
+            "name": "%c2%a78%c2%a7l%c2%a7nRenewed%c2%a77%c2%a7l%c2%a7nMen%c3%b9%c2%a7rv3.2.zip",
+            "id": 4600569
         },
         {
             "type": "cf",
@@ -831,16 +837,16 @@
             "media": "texture"
         },
         {
-            "type": "pm",
-            "slug": "1-13-1-16-unique-spawn-eggs",
-            "name": "unique-spawn-eggs-v1-5.zip",
-            "media": "texture"
-        },
-        {
             "type": "cf",
             "slug": "xalis-bushy-leaves",
             "name": "xali%27s+Bushy+Leaves+v3.4.1.zip",
             "id": 4677561
+        },
+        {
+            "type": "pm",
+            "slug": "xxvi-s-better-cauldrons",
+            "name": "better-cauldrons.zip",
+            "media": "texture"
         }
     ],
     "shaderpacks": [
