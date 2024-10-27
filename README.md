@@ -1,3 +1,9 @@
+> [!NOTE]  
+> **Unmaintained**
+> 
+> This is unmaintained as I don't use it anymore and it doesn't work anymore: the latest tests failed due to curseforge changing their API again.
+> Anyone willing to use it is free to fork my project under the GPLv3/Apache license
+
 # Minecraft Modpack Manager
 
 [![Version](https://img.shields.io/github/v/release/tygoee/mcm-manager?display_name=tag)](https://github.com/tygoee/mcm-manager/releases/latest)
